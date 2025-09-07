@@ -1,0 +1,40 @@
+{
+  "name": "chat-pdf-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "worker": "nodemon worker.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker\"",
+    "start": "node index.js",
+    "db:studio": "npx prisma studio",
+    "db:push": "npx prisma db push",
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev",
+    "db:reset": "npx prisma migrate reset"
+  },
+  "dependencies": {
+    "@clerk/clerk-sdk-node": "^5.1.6",
+    "@clerk/express": "^1.7.29",
+    "@google/generative-ai": "^0.21.0",
+    "@langchain/community": "^0.3.18",
+    "@langchain/google-genai": "^0.1.2",
+    "@langchain/qdrant": "^0.1.1",
+    "@prisma/client": "^6.15.0",
+    "axios": "^1.7.9",
+    "bullmq": "^5.34.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/uuid": "^10.0.0",
+    "concurrently": "^9.1.0",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.15.0"
+  }
+}
