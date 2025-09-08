@@ -9,17 +9,12 @@
 <!-- ✅ FIX: Using standardized, small badges for a clean look -->
 
 <p>
-<img src="https://img.icons8.com/fluent-systems-filled/512/nextjs.png" alt="Next.js">
-
-<img src="https://cdn-icons-png.flaticon.com/512/919/919825.png" alt="Node.js">
-
-<img src="https://img.favpng.com/7/5/11/postgresql-logo-computer-software-database-png-favpng-VzwjvpxaDys6FnN0apYZJbGV7.jpg" alt="PostgreSQL">
-
-<img src="https://miro.medium.com/0*cy5S4LnOIInTBXed.png" alt="TypeScript">
-
-<img src="https://cdn.worldvectorlogo.com/logos/prisma-2.svg" alt="Prisma">
-
-<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJl4fp0SkQbTPU5ZxVl6AKWYuKCwM0gIhNtQ&s" alt="Docker">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Next.js-000000%3Fstyle%3Dfor-the-badge%26logo%3Dnextdotjs%26logoColor%3Dwhite" alt="Next.js"/>
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Node.js-339933%3Fstyle%3Dfor-the-badge%26logo%3Dnodedotjs%26logoColor%3Dwhite" alt="Node.js"/>
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/PostgreSQL-316192%3Fstyle%3Dfor-the-badge%26logo%3Dpostgresql%26logoColor%3Dwhite" alt="PostgreSQL"/>
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/TypeScript-007ACC%3Fstyle%3Dfor-the-badge%26logo%3Dtypescript%26logoColor%3Dwhite" alt="TypeScript"/>
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Prisma-3982CE%3Fstyle%3Dfor-the-badge%26logo%3Dprisma%26logoColor%3Dwhite" alt="Prisma"/>
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Docker-2496ED%3Fstyle%3Dfor-the-badge%26logo%3Ddocker%26logoColor%3Dwhite" alt="Docker"/>
 </p>
 </div>
 
