@@ -1,143 +1,78 @@
-Chat with PDF AI
-A secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.
+<h1>Chat with PDF AI</h1>
 
-✨ Key Features
-🔐 Secure User Authentication: Full sign-up, sign-in, and session management powered by Clerk.
+<p><strong>Chat with PDF AI</strong> is a secure, multi-user web application that allows you to upload PDFs and have AI-powered conversations about their content.</p>
 
-📂 Multi-Chat Management: Users can create, rename, and delete multiple, isolated chat conversations.
+<h2>Features</h2>
+<ul>
+  <li>🔐 <strong>Secure User Authentication</strong> – Full sign-up, sign-in, and session management powered by Clerk.</li>
+  <li>💬 <strong>Multi-Chat Management</strong> – Create, rename, and delete multiple, isolated chat conversations.</li>
+  <li>📄 <strong>Per-Chat PDF Uploads</strong> – Upload PDF documents to specific chat sessions.</li>
+  <li>🤖 <strong>AI-Powered Q&amp;A</strong> – Uses Google’s Gemini model to answer questions based on document content.</li>
+  <li>🛡 <strong>Source-Specific Context</strong> – Ensures no data leakage between different users' conversations.</li>
+  <li>⚡ <strong>Background Processing</strong> – Handles PDF processing with a robust worker using BullMQ and Redis.</li>
+  <li>🔍 <strong>Vector Search</strong> – Uses Qdrant for efficient similarity searches.</li>
+  <li>🎨 <strong>Polished UI</strong> – Modern, responsive interface with dark mode, built with Next.js and Tailwind CSS.</li>
+</ul>
 
-⬆️ Per-Chat PDF Uploads: Upload PDF documents to specific chat sessions for organized knowledge bases.
+<h2>Tech Stack</h2>
+<ul>
+  <li><strong>Frontend</strong>: Next.js, React, TypeScript, Tailwind CSS</li>
+  <li><strong>Backend</strong>: Node.js, Express.js</li>
+  <li><strong>Authentication</strong>: Clerk</li>
+  <li><strong>Databases</strong>: PostgreSQL (Prisma), Qdrant (Vector Store), Redis (Queue)</li>
+  <li><strong>AI</strong>: Google Gemini, LangChain.js</li>
+</ul>
 
-🧠 AI-Powered Q&A (RAG): Leverages a Retrieval-Augmented Generation pipeline with Google's Gemini model to answer questions based on the uploaded documents.
+<h2>Installation</h2>
 
-🎯 Source-Specific Context: The AI is instructed to only use information from the documents within the active chat, ensuring no data leakage between conversations.
-
-⏳ Background Processing: PDF parsing and embedding are handled by a robust background worker using BullMQ and Redis, keeping the UI fast and responsive.
-
-💾 Vector Database: Uses Qdrant for efficient similarity searches to find the most relevant document context.
-
-🎨 Polished & Responsive UI: A modern, three-panel interface with collapsible sidebars, dark mode, and loading states, built with Next.js, Tailwind CSS, and Shadcn/ui.
-
-🛠️ Tech Stack & Architecture
-This project uses a monorepo structure with a separate client and server.
-
-Frontend (client)
-Framework: Next.js (with App Router)
-
-Language: TypeScript
-
-UI: React, Tailwind CSS, Shadcn/ui
-
-Authentication: Clerk
-
-Backend (server)
-Framework: Node.js with Express.js
-
-Language: JavaScript (ESM)
-
-Database ORM: Prisma
-
-Background Jobs: BullMQ
-
-Authentication: Clerk SDK
-
-Databases & Services
-Relational Database: PostgreSQL (for users, chats, files, messages)
-
-Vector Database: Qdrant
-
-Queue Management: Redis
-
-AI & Embeddings: Google Gemini API & LangChain.js
-
-🚀 Getting Started
-Follow these instructions to set up and run the project locally.
-
-Prerequisites
-Node.js (v18 or later)
-
-Git
-
-Docker and Docker Compose
-
-1. Clone the Repository
-git clone [https://github.com/vedbabar/chat-with-pdf.git](https://github.com/vedbabar/chat-with-pdf.git)
+<p>Clone the repository:</p>
+<pre><code>git clone https://github.com/vedbabar/chat-with-pdf.git
 cd chat-with-pdf
+</code></pre>
 
-2. Set Up Environment Variables
-You will need to create .env files for both the client and the server.
+<h3>Set Up Environment Variables</h3>
+<p>Create the following files and populate them with your API keys and database URLs:</p>
+<ul>
+  <li><code>.env</code> in the <code>server</code> directory</li>
+  <li><code>.env.local</code> in the <code>client</code> directory</li>
+</ul>
 
-In the server folder, create a .env file:
-
-# server/.env
-
-# PostgreSQL Database Connection String
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
-
-# Google AI API Key
-GOOGLE_API_KEY="your_google_api_key"
-
-# Qdrant URL
-QDRANT_URL="http://localhost:6333"
-
-# Clerk Keys
-CLERK_SECRET_KEY="sk_test_..."
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
-
-In the client folder, create a .env.local file:
-
-# client/.env.local
-
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-
-You can get your API keys from the dashboards of Google AI Studio and Clerk.
-
-3. Install Dependencies
-Install the necessary packages for both the server and the client.
-
-# In the root folder
+<h3>Install Dependencies</h3>
+<pre><code># In the project's root folder
 npm install ./server
 npm install ./client
+</code></pre>
 
-4. Start the Databases with Docker
-The easiest way to run PostgreSQL, Redis, and Qdrant is with Docker. A docker-compose.yml file is included.
+<h3>Start Services with Docker</h3>
+<p>This will start PostgreSQL, Redis, and Qdrant:</p>
+<pre><code>docker-compose up -d
+</code></pre>
 
-# In the root folder, run:
-docker-compose up -d
+<h3>Run Database Migration</h3>
+<p>Inside the server folder, run:</p>
+<pre><code>npx prisma migrate dev
+</code></pre>
 
-5. Run Database Migrations
-With the database running, tell Prisma to create the necessary tables.
+<h2>Usage</h2>
 
-# In the server folder, run:
-npx prisma migrate dev
-
-6. Run the Application
-You will need three separate terminals.
-
-Terminal 1: Start the Backend Server
-
-cd server
+<p>To run the application, open three terminals:</p>
+<ol>
+  <li>
+    <p><strong>Backend Server</strong></p>
+    <pre><code>cd server
 node index.js
-
-Terminal 2: Start the Background Worker
-
-cd server
+</code></pre>
+  </li>
+  <li>
+    <p><strong>Background Worker</strong></p>
+    <pre><code>cd server
 node worker.js
-
-Terminal 3: Start the Frontend Client
-
-cd client
+</code></pre>
+  </li>
+  <li>
+    <p><strong>Frontend</strong></p>
+    <pre><code>cd client
 npm run dev
-
-Your application should now be running! Open your browser to http://localhost:3000 to see it in action.
-
-🌟 Future Improvements
-Streaming Responses: Stream the AI's response token by token for a more interactive, real-time feel.
-
-Individual File Deletion: Implement logic to delete a single file and its associated vectors from a chat.
-
-PDF Highlighting: Use a library like react-pdf to display the PDF and highlight the source passages the AI used for its answer.
-
-Support for More File Types: Extend the document loader to handle .docx, .txt, and other common file formats.
+</code></pre>
+  </li>
+</ol>
