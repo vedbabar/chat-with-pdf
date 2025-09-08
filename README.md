@@ -1,45 +1,5 @@
-<div align="center">
-<!-- TODO: Replace this with a real URL to a banner image you create -->
-<!-- <img src="https://www.google.com/search?q=https://via.placeholder.com/800x200.png%3Ftext%3DDocuChat%2BAI%2BBanner" alt="DocuChat AI Banner" width="800"/> -->
-<h1>Chat-with-PDF AI 📄🤖</h1>
-<p>
-<b>A secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.</b>
-</p>
-
-<!-- ✅ FIX: Using standardized, small badges for a clean look -->
-
-
-This full-stack project allows users to sign up, manage separate chat sessions, upload documents to each session, and get intelligent answers sourced directly from the document's content. It's built on a modern, robust tech stack designed for scalability and performance.
-
-<br>
-<div align="center">
-<em>A preview of the DocuChat AI dashboard.</em><br><br>
-<!-- TODO: Replace this with a real screenshot of your application -->
-<img src="https://www.google.com/search?q=https://via.placeholder.com/800x450.png%3Ftext%3DYour%2BApp%2BScreenshot" alt="App Screenshot" width="800"/>
-</div>
-
-📚 Table of Contents
-✨ Key Features
-
-🛠️ Tech Stack & Architecture
-
-🚀 Getting Started
-
-Prerequisites
-
-1. Clone the Repository
-
-2. Set Up Environment Variables
-
-3. Install Dependencies
-
-4. Start the Databases with Docker
-
-5. Run Database Migrations
-
-6. Run the Application
-
-🌟 Future Improvements
+Chat-with-PDF AI 📄🤖
+A secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.
 
 ✨ Key Features
 🔐 Secure User Authentication: Full sign-up, sign-in, and session management powered by Clerk.
