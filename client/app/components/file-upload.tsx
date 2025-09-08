@@ -26,62 +26,83 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   onChatDelete,
   onFileUploadSuccess,
 }) => {
-  const [files, setFiles] = React.useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { getToken } = useAuth();
 
-  // Fetch files for the current chat
-  const fetchFilesForChat = React.useCallback(async () => {
-    if (!chatId) {
-      setFiles([]);
+  // Per-chat file caching system to prevent re-renders
+  const [chatFiles, setChatFiles] = React.useState<Record<string, UploadedFile[]>>({});
+  const [loadingStates, setLoadingStates] = React.useState<Record<string, boolean>>({});
+
+  // Get files for current chat
+  const files = chatId ? (chatFiles[chatId] || []) : [];
+  const isLoading = chatId ? (loadingStates[chatId] ?? true) : false;
+
+  // Fetch files only when switching to a new chat that hasn't been loaded
+  React.useEffect(() => {
+    if (!chatId) return;
+
+    // If we already have files for this chat, don't refetch
+    if (chatFiles[chatId]) {
       return;
     }
-    setIsLoading(true);
-    try {
-      const token = await getToken();
-      const response = await fetch(`http://localhost:8000/chats/${chatId}/files`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setFiles(data);
-      } else {
-        setFiles([]);
-      }
-    } catch (error) {
-      setFiles([]);
-    } finally {
-      setTimeout(() => setIsLoading(false), 200);
-    }
-  }, [chatId, getToken]);
 
-  React.useEffect(() => {
-    fetchFilesForChat();
-  }, [fetchFilesForChat]);
+    // Set loading for this specific chat
+    setLoadingStates(prev => ({ ...prev, [chatId]: true }));
+
+    const fetchFiles = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch(`http://localhost:8000/chats/${chatId}/files`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setChatFiles(prev => ({ ...prev, [chatId]: data || [] }));
+        } else {
+          setChatFiles(prev => ({ ...prev, [chatId]: [] }));
+        }
+      } catch (error) {
+        setChatFiles(prev => ({ ...prev, [chatId]: [] }));
+      } finally {
+        setLoadingStates(prev => ({ ...prev, [chatId]: false }));
+      }
+    };
+
+    fetchFiles();
+  }, [chatId, getToken]);
 
   const handleFileUpload = async (file: File) => {
     if (!chatId) return;
     setIsUploading(true);
 
     const tempId = `temp-${Date.now()}`;
-    setFiles(prev => [{
+    const tempFile: UploadedFile = {
       id: tempId,
       filename: file.name,
       createdAt: new Date().toISOString(),
       chatId,
       status: 'PROCESSING',
       uploadProgress: 0
-    }, ...prev]);
+    };
 
+    // Add temp file to specific chat
+    setChatFiles(prev => ({
+      ...prev,
+      [chatId]: [tempFile, ...(prev[chatId] || [])]
+    }));
+
+    // Progress simulation
     let progress = 0;
     const progressInterval = setInterval(() => {
       progress = Math.min(progress + Math.random() * 25, 95);
-      setFiles(prev => prev.map(f =>
-        f.id === tempId ? { ...f, uploadProgress: progress } : f
-      ));
+      setChatFiles(prev => ({
+        ...prev,
+        [chatId]: (prev[chatId] || []).map(f =>
+          f.id === tempId ? { ...f, uploadProgress: progress } : f
+        )
+      }));
     }, 300);
 
     try {
@@ -89,22 +110,75 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
       const formData = new FormData();
       formData.append('pdf', file);
 
-      await fetch(`http://localhost:8000/chats/${chatId}/files`, {
+      const response = await fetch(`http://localhost:8000/chats/${chatId}/files`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       });
 
       clearInterval(progressInterval);
-      onFileUploadSuccess();
-      await fetchFilesForChat();
-      setTimeout(() => fetchFilesForChat(), 7000);
-      setTimeout(() => setIsUploading(false), 500);
+
+      if (response.ok) {
+        const uploadedFile = await response.json();
+        
+        // Replace temp file with real file data in specific chat
+        setChatFiles(prev => ({
+          ...prev,
+          [chatId]: (prev[chatId] || []).map(f => 
+            f.id === tempId 
+              ? { ...uploadedFile.file, uploadProgress: 100 }
+              : f
+          )
+        }));
+
+        // Clear progress after a short delay
+        setTimeout(() => {
+          setChatFiles(prev => ({
+            ...prev,
+            [chatId]: (prev[chatId] || []).map(f => ({
+              ...f,
+              uploadProgress: undefined
+            }))
+          }));
+        }, 1000);
+
+        onFileUploadSuccess();
+
+        // <-- Add this block to re-fetch file status after 7 seconds
+        setTimeout(async () => {
+          try {
+            const token = await getToken();
+            const statusRes = await fetch(`http://localhost:8000/chats/${chatId}/files`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (statusRes.ok) {
+              const data = await statusRes.json();
+              setChatFiles(prev => ({
+                ...prev,
+                [chatId]: data || []
+              }));
+            }
+          } catch (e) {
+            // Optionally handle error
+          }
+        }, 7000);
+        
+      } else {
+        throw new Error('Upload failed');
+      }
     } catch (error) {
       clearInterval(progressInterval);
-      setFiles(prev => prev.map(f =>
-        f.id === tempId ? { ...f, status: 'ERROR', uploadProgress: 0 } : f
-      ));
+      
+      // Mark temp file as error in specific chat
+      setChatFiles(prev => ({
+        ...prev,
+        [chatId]: (prev[chatId] || []).map(f =>
+          f.id === tempId 
+            ? { ...f, status: 'ERROR', uploadProgress: 0 }
+            : f
+        )
+      }));
+    } finally {
       setIsUploading(false);
     }
   };
@@ -120,7 +194,11 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   };
 
   const removeFile = (fileId: string) => {
-    setFiles(prev => prev.filter(f => f.id !== fileId));
+    if (!chatId) return;
+    setChatFiles(prev => ({
+      ...prev,
+      [chatId]: (prev[chatId] || []).filter(f => f.id !== fileId)
+    }));
   };
 
   const handleDeleteChat = async () => {
@@ -134,7 +212,8 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
-        setFiles([]);
+        // Clear files for this chat
+        setChatFiles(prev => ({ ...prev, [chatId]: [] }));
         onChatDelete();
       }
     } catch (error) {
