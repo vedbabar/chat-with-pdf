@@ -1,4 +1,4 @@
-Chat-with-PDF AI 📄🤖
+Chat with PDF AI
 A secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.
 
 ✨ Key Features
