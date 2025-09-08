@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ChatComponent from './components/chat';
 import FileUploadComponent from './components/file-upload';
-import { Menu, Plus, MessageCircle, FileText, Edit2, Check, X, Loader2 } from 'lucide-react';
+import { Menu, Plus, MessageCircle, FileText, Edit2, Check, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingChatName, setEditingChatName] = useState('');
+  const [filePanelOpen, setFilePanelOpen] = useState(true);
   
   const { getToken } = useAuth();
   const router = useRouter();
@@ -191,32 +192,50 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-        <div className="border-t border-slate-200 dark:border-slate-700">
-          <FileUploadComponent chatId={selectedChatId} onChatDelete={handleChatDelete} onFileUploadSuccess={() => loadChats(false)} />
-        </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        <div className="lg:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2 flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)}><Menu className="h-4 w-4" /></Button>
-          <UserButton afterSignOutUrl="/" />
-        </div>
-        
-        {selectedChatId ? (
-          <ChatComponent 
-            key={selectedChatId} // ✅ FIX: Add a key to force re-mounting
-            chatId={selectedChatId}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-center">
-            <div>
-              <MessageCircle className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300">Welcome to DocuChat</h2>
-              <p className="text-slate-500 dark:text-slate-400 mt-2">Create a new chat to get started.</p>
-            </div>
+      {/* Main Content Area + Right Panel */}
+      <div className="flex-1 flex flex-row">
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          <div className="lg:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2 flex items-center justify-between">
+            <Button variant="outline" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)}><Menu className="h-4 w-4" /></Button>
+            <UserButton afterSignOutUrl="/" />
           </div>
-        )}
+          {selectedChatId ? (
+            <ChatComponent 
+              key={selectedChatId} // ✅ FIX: Add a key to force re-mounting
+              chatId={selectedChatId}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-center">
+              <div>
+                <MessageCircle className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300">Welcome to DocuChat</h2>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">Create a new chat to get started.</p>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Collapsible File Upload Panel */}
+        <div className={`relative transition-all duration-300 ${filePanelOpen ? 'w-[350px] min-w-[300px]' : 'w-6 min-w-0'} bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col`}>
+          {/* Collapse/Expand Button */}
+          <button
+            className="absolute -left-3 top-1/2 z-10 transform -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-full shadow p-1 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+            onClick={() => setFilePanelOpen(open => !open)}
+            aria-label={filePanelOpen ? "Collapse file panel" : "Expand file panel"}
+            tabIndex={0}
+          >
+            {filePanelOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+          {filePanelOpen && (
+            <FileUploadComponent
+              chatId={selectedChatId}
+              onChatDelete={handleChatDelete}
+              onFileUploadSuccess={() => loadChats(false)}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
