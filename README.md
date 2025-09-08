@@ -1,5 +1,5 @@
 Chat-with-PDF AI 📄🤖
-Chat-with-PDF AI is a secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.
+This is a secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.
 
 This full-stack project allows users to sign up, manage separate chat sessions, upload documents to each session, and get intelligent answers sourced directly from the document's content. It's built on a modern, robust tech stack designed for scalability and performance.
 
