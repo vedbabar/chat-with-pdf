@@ -1,24 +1,67 @@
-Chat-with-PDF AI 📄🤖
-This is a secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.
+<div align="center">
+<img src="https://path-to-your-banner-image.png" alt="DocuChat AI Banner" width="800"/>
+<h1>Chat-with-PDF AI 📄🤖</h1>
+<p>
+<b>A secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.</b>
+</p>
+
+<p>
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Next.js-000000%3Fstyle%3Dfor-the-badge%26logo%3Dnextdotjs%26logoColor%3Dwhite" alt="Next.js">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Node.js-339933%3Fstyle%3Dfor-the-badge%26logo%3Dnodedotjs%26logoColor%3Dwhite" alt="Node.js">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/PostgreSQL-316192%3Fstyle%3Dfor-the-badge%26logo%3Dpostgresql%26logoColor%3Dwhite" alt="PostgreSQL">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/TypeScript-007ACC%3Fstyle%3Dfor-the-badge%26logo%3Dtypescript%26logoColor%3Dwhite" alt="TypeScript">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Prisma-3982CE%3Fstyle%3Dfor-the-badge%26logo%3Dprisma%26logoColor%3Dwhite" alt="Prisma">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Docker-2496ED%3Fstyle%3Dfor-the-badge%26logo%3Ddocker%26logoColor%3Dwhite" alt="Docker">
+</p>
+</div>
 
 This full-stack project allows users to sign up, manage separate chat sessions, upload documents to each session, and get intelligent answers sourced directly from the document's content. It's built on a modern, robust tech stack designed for scalability and performance.
 
+<br>
+<div align="center">
+<em>A preview of the DocuChat AI dashboard.</em><br><br>
+
+</div>
+
+📚 Table of Contents
 ✨ Key Features
-Secure User Authentication: Full sign-up, sign-in, and session management powered by Clerk.
 
-Multi-Chat Management: Users can create, rename, and delete multiple, isolated chat conversations.
+🛠️ Tech Stack & Architecture
 
-Per-Chat PDF Uploads: Upload PDF documents to specific chat sessions for organized knowledge bases.
+🚀 Getting Started
 
-AI-Powered Q&A (RAG): Leverages a Retrieval-Augmented Generation pipeline with Google's Gemini model to answer questions based on the uploaded documents.
+Prerequisites
 
-Source-Specific Context: The AI is instructed to only use information from the documents within the active chat, ensuring no data leakage between conversations.
+1. Clone the Repository
 
-Background Processing: PDF parsing and embedding are handled by a robust background worker using BullMQ and Redis, keeping the UI fast and responsive.
+2. Set Up Environment Variables
 
-Vector Database: Uses Qdrant for efficient similarity searches to find the most relevant document context.
+3. Install Dependencies
 
-Polished & Responsive UI: A modern, three-panel interface with collapsible sidebars, dark mode, and loading states, built with Next.js, Tailwind CSS, and Shadcn/ui.
+4. Start the Databases with Docker
+
+5. Run Database Migrations
+
+6. Run the Application
+
+🌟 Future Improvements
+
+✨ Key Features
+🔐 Secure User Authentication: Full sign-up, sign-in, and session management powered by Clerk.
+
+📂 Multi-Chat Management: Users can create, rename, and delete multiple, isolated chat conversations.
+
+⬆️ Per-Chat PDF Uploads: Upload PDF documents to specific chat sessions for organized knowledge bases.
+
+🧠 AI-Powered Q&A (RAG): Leverages a Retrieval-Augmented Generation pipeline with Google's Gemini model to answer questions based on the uploaded documents.
+
+🎯 Source-Specific Context: The AI is instructed to only use information from the documents within the active chat, ensuring no data leakage between conversations.
+
+⏳ Background Processing: PDF parsing and embedding are handled by a robust background worker using BullMQ and Redis, keeping the UI fast and responsive.
+
+💾 Vector Database: Uses Qdrant for efficient similarity searches to find the most relevant document context.
+
+🎨 Polished & Responsive UI: A modern, three-panel interface with collapsible sidebars, dark mode, and loading states, built with Next.js, Tailwind CSS, and Shadcn/ui.
 
 🛠️ Tech Stack & Architecture
 This project uses a monorepo structure with a separate client and server.
@@ -60,10 +103,11 @@ Node.js (v18 or later)
 
 Git
 
-Docker and Docker Compose (to easily run the databases)
+Docker and Docker Compose
 
 1. Clone the Repository
-git clone https://github.com/vedbabar/chat-with-pdf.git
+git clone [https://github.com/vedbabar/chat-with-pdf.git](https://github.com/vedbabar/chat-with-pdf.git)
+cd chat-with-pdf
 
 2. Set Up Environment Variables
 You will need to create .env files for both the client and the server.
@@ -103,23 +147,19 @@ npm install ./server
 npm install ./client
 
 4. Start the Databases with Docker
-The easiest way to run PostgreSQL, Redis, and Qdrant is with Docker. I've included a docker-compose.yml file for this.
+The easiest way to run PostgreSQL, Redis, and Qdrant is with Docker. A docker-compose.yml file is included.
 
-In the root folder, run:
-
+# In the root folder, run:
 docker-compose up -d
-
-This will start all three required services in the background.
 
 5. Run Database Migrations
 With the database running, tell Prisma to create the necessary tables.
 
-In the server folder, run:
-
+# In the server folder, run:
 npx prisma migrate dev
 
 6. Run the Application
-Now you can start all the parts of your application. You'll need three separate terminals.
+You will need three separate terminals.
 
 Terminal 1: Start the Backend Server
 
