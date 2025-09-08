@@ -19,7 +19,7 @@
   <li><strong>Frontend</strong>: Next.js, React, TypeScript, Tailwind CSS</li>
   <li><strong>Backend</strong>: Node.js, Express.js</li>
   <li><strong>Authentication</strong>: Clerk</li>
-  <li><strong>Databases</strong>: PostgreSQL (Prisma), Qdrant (Vector Store), Redis (Queue)</li>
+  <li><strong>Databases</strong>: PostgreSQL (Prisma), Qdrant (Vector Store), Redis, BullMQ (Queue)</li>
   <li><strong>AI</strong>: Google Gemini, LangChain.js</li>
 </ul>
 
