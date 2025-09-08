@@ -10,11 +10,14 @@ import 'dotenv/config';
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { QdrantClient } from "@qdrant/js-client-rest";
 
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+
+const qdrantClient = new QdrantClient({ url: process.env.QDRANT_URL || "http://localhost:6333" });
 
 const queue = new Queue("file-upload-queue", {
   connection: { host: `localhost`, port: "6379" },
@@ -51,36 +54,80 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
 
 const clerkAuthMiddleware = ClerkExpressRequireAuth();
 
-const createEnhancedPrompt = (context, userQuery, chatHistory = []) => {
-  const contextText = context.map(doc => `
-Source: ${doc.metadata?.source || 'Document'}
-Page: ${doc.metadata?.loc?.pageNumber || 'Unknown'}
-Content: ${doc.pageContent}
-`).join('\n---\n');
+// const createEnhancedPrompt = (context, userQuery, chatHistory = []) => {
+//   const contextText = context.map(doc => `
+// Source: ${doc.metadata?.source || 'Document'}
+// Page: ${doc.metadata?.loc?.pageNumber || 'Unknown'}
+// Content: ${doc.pageContent}
+// `).join('\n---\n');
 
-  const historyText = chatHistory.slice(-6).map(msg => 
+//   const historyText = chatHistory.slice(-6).map(msg => 
+//     `${msg.role.toUpperCase()}: ${msg.content}`
+//   ).join('\n');
+
+//   return `You are DocuChat, an expert document analysis assistant.
+
+// INSTRUCTIONS:
+// 1. Answer based PRIMARILY on the provided context from the PDF document.
+// 2. Be specific and cite relevant sections when possible.
+// 3. If the context doesn't contain enough information, clearly state this.
+// 4. Maintain conversation continuity using the chat history.
+// 5. Return all output in HTML format with proper formatting.
+// 6. Use <b> or <strong> for headings, <p> for paragraphs.
+// 7. Use a normal hyphen (-) for bullet points — do NOT use <ul> or <li>.
+
+// DOCUMENT CONTEXT:
+// ${contextText}
+
+// ${historyText ? `RECENT CONVERSATION HISTORY:\n${historyText}\n` : ''}
+
+// CURRENT USER QUESTION: ${userQuery}
+
+// Please provide a comprehensive answer based on the document context. If you reference specific information, mention which part of the document it comes from.`;
+// };
+
+
+
+const createEnhancedPrompt = (context, userQuery, chatHistory = []) => {
+  const contextText = context.map(doc => 
+    `📄 **Source**: ${doc.metadata?.source || 'Document'}
+📍 **Page**: ${doc.metadata?.loc?.pageNumber || 'Unknown'}
+📝 **Content**: ${doc.pageContent}`
+  ).join('\n---\n');
+
+  const historyText = chatHistory.slice(-6).map(msg =>
     `${msg.role.toUpperCase()}: ${msg.content}`
   ).join('\n');
 
-  return `You are DocuChat, an expert document analysis assistant.
+  return `You are DocuChat, an expert document analysis assistant specializing in comprehensive PDF analysis.
 
-INSTRUCTIONS:
-1. Answer based PRIMARILY on the provided context from the PDF document.
-2. Be specific and cite relevant sections when possible.
-3. If the context doesn't contain enough information, clearly state this.
-4. Maintain conversation continuity using the chat history.
-5. Return all output in HTML format with proper formatting.
-6. Use <b> or <strong> for headings, <p> for paragraphs.
-7. Use a normal hyphen (-) for bullet points — do NOT use <ul> or <li>.
+**CORE INSTRUCTIONS:**
+1. **Primary Focus**: Answer based PRIMARILY on the provided document context
+2. **Citation Style**: Reference specific pages/sections when citing information
+3. **Transparency**: If context lacks information, clearly state: "Based on the available document content, I don't have sufficient information about..."
+4. **Conversational**: Maintain natural conversation flow using chat history
+5. **Formatting**: Return responses in clean HTML with proper structure
 
-DOCUMENT CONTEXT:
+**RESPONSE FORMAT:**
+- Use <strong> tags for important headings and key terms
+- Use <p> tags for paragraphs with proper spacing
+- For lists, use: <div class="flex items-start gap-2 my-2"><span class="text-blue-500 mt-1">•</span><span>content</span></div>
+- Highlight page references like: page 5, section 3, chapter 2
+- Use professional, analytical tone
+
+**DOCUMENT CONTEXT:**
 ${contextText}
 
-${historyText ? `RECENT CONVERSATION HISTORY:\n${historyText}\n` : ''}
+${historyText ? `**RECENT CONVERSATION:**\n${historyText}\n` : ''}
 
-CURRENT USER QUESTION: ${userQuery}
+**USER QUESTION:** ${userQuery}
 
-Please provide a comprehensive answer based on the document context. If you reference specific information, mention which part of the document it comes from.`;
+**ANALYSIS INSTRUCTIONS:**
+- Provide comprehensive analysis based on document content
+- Cite specific sections/pages when referencing information  
+- If making inferences, clearly distinguish between direct content and analysis
+- Maintain focus on the document's actual content and themes
+- Offer to clarify or elaborate on any points mentioned`;
 };
 
 // --- Public Route ---
@@ -245,7 +292,7 @@ app.get("/chat", async (req, res) => {
     }
 
     const enhancedPrompt = createEnhancedPrompt(vectorResults, userQuery, chatHistory);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     // ✅ FIX: Provide the correct data for generating content
     const result = await model.generateContent({
@@ -327,7 +374,6 @@ app.delete("/chats/:chatId", async (req, res) => {
 
     // Clean up associated data from Qdrant
     // Note: This requires the Qdrant client
-    const qdrantClient = new qdrantClient({ url: "http://localhost:6333" });
     await qdrantClient.delete("langchainjs-testing", {
         filter: { must: [{ key: "metadata.chatId", match: { value: chatId } }] }
     });

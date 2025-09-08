@@ -161,7 +161,7 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
           } catch (e) {
             // Optionally handle error
           }
-        }, 7000);
+        }, 8000);
         
       } else {
         throw new Error('Upload failed');
