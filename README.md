@@ -1,15 +1,24 @@
 <div align="center">
+<!-- TODO: Replace this with a real URL to a banner image you create -->
+<!-- <img src="https://www.google.com/search?q=https://via.placeholder.com/800x200.png%3Ftext%3DDocuChat%2BAI%2BBanner" alt="DocuChat AI Banner" width="800"/> -->
 <h1>Chat-with-PDF AI 📄🤖</h1>
 <p>
 <b>A secure, multi-user web application to upload PDFs and have AI-powered conversations about their content.</b>
 </p>
 
+<!-- ✅ FIX: Using standardized, small badges for a clean look -->
+
 <p>
 <img src="https://img.icons8.com/fluent-systems-filled/512/nextjs.png" alt="Next.js">
+
 <img src="https://cdn-icons-png.flaticon.com/512/919/919825.png" alt="Node.js">
+
 <img src="https://img.favpng.com/7/5/11/postgresql-logo-computer-software-database-png-favpng-VzwjvpxaDys6FnN0apYZJbGV7.jpg" alt="PostgreSQL">
+
 <img src="https://miro.medium.com/0*cy5S4LnOIInTBXed.png" alt="TypeScript">
+
 <img src="https://cdn.worldvectorlogo.com/logos/prisma-2.svg" alt="Prisma">
+
 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJl4fp0SkQbTPU5ZxVl6AKWYuKCwM0gIhNtQ&s" alt="Docker">
 </p>
 </div>
@@ -19,7 +28,8 @@ This full-stack project allows users to sign up, manage separate chat sessions, 
 <br>
 <div align="center">
 <em>A preview of the DocuChat AI dashboard.</em><br><br>
-
+<!-- TODO: Replace this with a real screenshot of your application -->
+<img src="https://www.google.com/search?q=https://via.placeholder.com/800x450.png%3Ftext%3DYour%2BApp%2BScreenshot" alt="App Screenshot" width="800"/>
 </div>
 
 📚 Table of Contents
