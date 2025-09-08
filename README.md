@@ -76,3 +76,4 @@ npm run dev
 </code></pre>
   </li>
 </ol>
+<p>Your application should now be running! Open your browser to <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> to see it in action.</p>
