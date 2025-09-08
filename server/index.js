@@ -327,10 +327,10 @@ app.delete("/chats/:chatId", async (req, res) => {
 
     // Clean up associated data from Qdrant
     // Note: This requires the Qdrant client
-    // const qdrantClient = new QdrantClient({ url: process.env.QDRANT_URL });
-    // await qdrantClient.delete("langchainjs-testing", {
-    //     filter: { must: [{ key: "metadata.chatId", match: { value: chatId } }] }
-    // });
+    const qdrantClient = new qdrantClient({ url: "http://localhost:6333" });
+    await qdrantClient.delete("langchainjs-testing", {
+        filter: { must: [{ key: "metadata.chatId", match: { value: chatId } }] }
+    });
     
     await prisma.message.deleteMany({ where: { chatId } });
     await prisma.file.deleteMany({ where: { chatId } });
