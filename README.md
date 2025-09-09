@@ -19,7 +19,7 @@
   <li><strong>Frontend</strong>: Next.js, React, TypeScript, Tailwind CSS</li>
   <li><strong>Backend</strong>: Node.js, Express.js</li>
   <li><strong>Authentication</strong>: Clerk</li>
-  <li><strong>Databases</strong>: PostgreSQL (Prisma), Qdrant (Vector Store), Redis, BullMQ (Queue)</li>
+  <li><strong>Databases</strong>: PostgreSQL (Prisma), Qdrant (Vector Store), Redis (Queue)</li>
   <li><strong>AI</strong>: Google Gemini, LangChain.js</li>
 </ul>
 
@@ -32,10 +32,20 @@ cd chat-with-pdf
 
 <h3>Set Up Environment Variables</h3>
 <p>Create the following files and populate them with your API keys and database URLs:</p>
-<ul>
-  <li><code>.env</code> in the <code>server</code> directory</li>
-  <li><code>.env.local</code> in the <code>client</code> directory</li>
-</ul>
+
+<h4>Backend <code>.env</code></h4>
+<pre><code>GOOGLE_API_KEY=
+DATABASE_URL=
+PORT=8000
+NODE_ENV="development"
+CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+</code></pre>
+
+<h4>Frontend <code>.env.local</code></h4>
+<pre><code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+</code></pre>
 
 <h3>Install Dependencies</h3>
 <pre><code># In the project's root folder
@@ -76,4 +86,7 @@ npm run dev
 </code></pre>
   </li>
 </ol>
-<p>Your application should now be running! Open your browser to <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> to see it in action.</p>
+
+<h3>Access the App</h3>
+<p>Your application should now be running! Open it in your browser:</p>
+<p>👉 <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
