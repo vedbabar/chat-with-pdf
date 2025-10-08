@@ -37,5 +37,5 @@ model File {
   createdAt DateTime @default(now())
   chatId    String
   chat      Chat     @relation("ChatFiles", fields: [chatId], references: [id], onDelete: Cascade)
-  status    String   @default("PENDING") // ✅ ADD THIS LINE
+  status    String   @default("PENDING")
 }
