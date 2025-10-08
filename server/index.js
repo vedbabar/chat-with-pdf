@@ -138,44 +138,6 @@ app.get("/", (req, res) => {
 // --- Protected Routes ---
 app.use(clerkAuthMiddleware);
 
-// app.post("/chats/:chatId/files", async (req, res) => {
-//   try {
-//     const { chatId } = req.params;
-//     const { userId } = req.auth;
-
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
-
-//     const chat = await prisma.chat.findUnique({ where: { id: chatId } });
-//     if (!chat || chat.userId !== userId) {
-//       return res.status(404).json({ error: "Chat not found or access denied" });
-//     }
-
-//     const fileRecord = await prisma.file.create({
-//       data: {
-//         filename: req.file.originalname,
-//         path: req.file.path,
-//         chatId,
-//       },
-//     });
-
-//     await queue.add("file-ready", JSON.stringify({
-//         fileId: fileRecord.id,
-//         path: req.file.path,
-//         chatId,
-//         filename: req.file.originalname, 
-//     }));
-
-//     return res.json({
-//       message: "File uploaded successfully and sent for processing.",
-//       file: fileRecord,
-//     });
-//   } catch (error) {
-//     console.error("❌ Upload error:", error);
-//     res.status(500).json({ error: "Upload failed" });
-//   }
-// });
 app.post("/chats/:chatId/files", upload.single("pdf"), async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -254,8 +216,6 @@ app.get("/chat", async (req, res) => {
     if (!chat || chat.userId !== userId) {
       return res.status(404).json({ error: "Chat not found or access denied" });
     }
-
-    // ✅ FIX: Provide the correct data to save the user's message
     const userMsg = await prisma.message.create({
         data: {
             chatId: String(chatId),
@@ -264,7 +224,6 @@ app.get("/chat", async (req, res) => {
         },
     });
 
-    // ✅ FIX: Provide the correct data to get the chat history
     const chatHistory = await prisma.message.findMany({
         where: { chatId: String(chatId) },
         orderBy: { createdAt: 'asc' },
@@ -294,7 +253,7 @@ app.get("/chat", async (req, res) => {
     const enhancedPrompt = createEnhancedPrompt(vectorResults, userQuery, chatHistory);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
-    // ✅ FIX: Provide the correct data for generating content
+  
     const result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: enhancedPrompt }] }],
         generationConfig: {
@@ -304,7 +263,6 @@ app.get("/chat", async (req, res) => {
     });
     const aiResponse = result.response.candidates[0].content.parts[0].text;
 
-    // ✅ FIX: Provide the correct data to save the AI's response
     const aiMsg = await prisma.message.create({
         data: {
             chatId: String(chatId),
