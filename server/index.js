@@ -53,12 +53,6 @@ const upload = multer({
 
 // -------------------- EXPRESS --------------------
 const app = express();
-app.use(cors());
-const allowedOrigins = [
-  "https://chat-with-pdf-h2vk.vercel.app", // Your Production Frontend
-  "http://localhost:3000"                    // Your Local Frontend (Keep this for dev!)
-];
-
 app.use(cors({
   origin: "*", // This allows ANY URL
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
