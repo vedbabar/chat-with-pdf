@@ -7,6 +7,7 @@
     "worker": "nodemon worker.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run worker\"",
     "start": "node index.js",
+    "postinstall": "prisma generate",
     "db:studio": "npx prisma studio",
     "db:push": "npx prisma db push",
     "db:generate": "npx prisma generate",
