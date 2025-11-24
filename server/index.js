@@ -209,6 +209,7 @@ app.post("/chats/:chatId/files", upload.single("pdf"), async (req, res) => {
             "file-ready",
             JSON.stringify({
                 fileId: fileRecord.id,
+                chatId,
                 url: fileURL, // Pass the URL to the worker
                 chatId,
                 publicId: publicId, 

@@ -11,16 +11,6 @@ import path from "path"; // ⭐ ADDED for path resolving
 import axios from "axios"; // ⭐ ADDED for downloading files
 import os from "os"; // ⭐ ADDED for temp directory
 
-import http from 'http';
-
-// Create a dummy server to keep Render happy
-const requestListener = function (req, res) {
-  res.writeHead(200);
-  res.end('Worker is running!');
-}
-const server = http.createServer(requestListener);
-server.listen(process.env.PORT || 8080);
-console.log("Dummy server listening...");
 
 // -------------------- INITIALIZATION --------------------
 const prisma = new PrismaClient();
