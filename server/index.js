@@ -9,6 +9,7 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import 'dotenv/config';
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
+import { ClerkExpressWithAuth } from '@clerk/clerk-sdk-node';
 import { QdrantClient } from "@qdrant/js-client-rest";
 import cloudinary from "cloudinary"; // ⭐ ADDED
 import streamifier from "streamifier"; // ⭐ ADDED
@@ -125,10 +126,10 @@ app.get("/", (req, res) => {
   res.json({ status: "Chat-PDF API Server Running with Google AI!" });
 });
 // -------------------- AUTH --------------------
-const clerkAuthMiddleware = ClerkExpressRequireAuth();
-// ---------- PROTECTED ROUTES MIDDLEWARE ----------
-app.use(clerkAuthMiddleware);
-
+// const clerkAuthMiddleware = ClerkExpressRequireAuth();
+// // ---------- PROTECTED ROUTES MIDDLEWARE ----------
+// app.use(clerkAuthMiddleware);
+app.use(ClerkExpressWithAuth());
 // ---------- CREATE CHAT ----------
 app.post("/chats", async (req, res) => {
   try {
