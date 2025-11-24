@@ -9,7 +9,7 @@ import { ChatMessagesSkeleton } from './skeletons';
 
 // ⭐ DEFINE API URL BASED ON ENVIRONMENT
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://chat-with-pdf-readme-generator.vercel.app' 
+  ? 'https://chat-with-pdf-back.vercel.app' 
   : 'http://localhost:8000';
 
 interface Doc {
