@@ -53,13 +53,16 @@ const upload = multer({
 
 // -------------------- EXPRESS --------------------
 const app = express();
+
+// ⭐ 1. CORS MUST BE FIRST (AND ALLOW ALL ORIGINS)
 app.use(cors({
-  origin: "*", // Allow ALL origins
+  origin: "*", 
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   credentials: true
 }));
 
+// ⭐ 2. HANDLE PREFLIGHT REQUESTS EXPLICITLY
 app.options("*", cors());
 
 app.use(express.json());
