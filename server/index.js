@@ -54,10 +54,13 @@ const upload = multer({
 // -------------------- EXPRESS --------------------
 const app = express();
 app.use(cors({
-  origin: "*", // This allows ANY URL
+  origin: "*", // Allow ALL origins
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: true
 }));
+
+app.options("*", cors());
 
 app.use(express.json());
 
