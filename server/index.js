@@ -129,7 +129,7 @@ app.get("/", (req, res) => {
 // const clerkAuthMiddleware = ClerkExpressRequireAuth();
 // // ---------- PROTECTED ROUTES MIDDLEWARE ----------
 // app.use(clerkAuthMiddleware);
-app.use(ClerkExpressWithAuth());
+// app.use(ClerkExpressWithAuth());
 // ---------- CREATE CHAT ----------
 app.post("/chats", async (req, res) => {
   try {
