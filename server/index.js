@@ -70,8 +70,7 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
   model: "text-embedding-004",
 });
 
-// -------------------- AUTH --------------------
-const clerkAuthMiddleware = ClerkExpressRequireAuth();
+
 
 // -------------------- PROMPT (KEPT FOR COMPLETENESS) --------------------
 const createEnhancedPrompt = (context, userQuery, chatHistory = []) => {
@@ -122,7 +121,8 @@ ${historyText ? `**RECENT CONVERSATION:**\n${historyText}\n` : ''}
 app.get("/", (req, res) => {
   res.json({ status: "Chat-PDF API Server Running with Google AI!" });
 });
-
+// -------------------- AUTH --------------------
+const clerkAuthMiddleware = ClerkExpressRequireAuth();
 // ---------- PROTECTED ROUTES MIDDLEWARE ----------
 app.use(clerkAuthMiddleware);
 
