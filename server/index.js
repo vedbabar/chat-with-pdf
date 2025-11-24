@@ -57,7 +57,7 @@ const app = express();
 
 // ⭐ 1. CORS MUST BE FIRST (AND ALLOW ALL ORIGINS)
 app.use(cors({
-  origin: "https://chat-with-pdf-l3hy.vercel.app/", 
+  origin: "https://chat-with-pdf-l3hy.vercel.app", 
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   credentials: true
