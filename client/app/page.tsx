@@ -9,23 +9,28 @@ import { Menu, Plus, MessageCircle, FileText, Edit2, Check, X, Loader2, ChevronL
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+// ⭐ DEFINE API URL BASED ON ENVIRONMENT
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://chat-with-pdf-readme-generator.vercel.app' 
+  : 'http://localhost:8000';
+
 // The main data structure for a single chat session
 interface File {
-    id: string;
-    filename: string;
-    path: string; // ⭐ This is now the Cloudinary URL
-    publicId: string; // ⭐ This is needed for the FileUploadComponent to show a proper download/view link
-    status: 'PROCESSING' | 'DONE' | 'ERROR';
-    createdAt: string;
+  id: string;
+  filename: string;
+  path: string; 
+  publicId: string; 
+  status: 'PROCESSING' | 'DONE' | 'ERROR';
+  createdAt: string;
 }
 
 interface Chat {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  messages?: any[];
-  files?: File[]; // ⭐ Use the new File interface
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  messages?: any[];
+  files?: File[]; 
 }
 
 export default function Dashboard() {
@@ -78,7 +83,8 @@ export default function Dashboard() {
           setLoading(false);
           return;
       }
-      const response = await fetch('http://localhost:8000/chats', {
+      // ⭐ UPDATED URL
+      const response = await fetch(`${API_BASE_URL}/chats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -109,7 +115,8 @@ export default function Dashboard() {
   const createNewChat = async () => {
     try {
       const token = await getToken();
-      const response = await fetch('http://localhost:8000/chats', {
+      // ⭐ UPDATED URL
+      const response = await fetch(`${API_BASE_URL}/chats`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +157,8 @@ export default function Dashboard() {
     if (!editingChatId || !editingChatName.trim()) return;
     try {
       const token = await getToken();
-      const response = await fetch(`http://localhost:8000/chats/${editingChatId}`, {
+      // ⭐ UPDATED URL
+      const response = await fetch(`${API_BASE_URL}/chats/${editingChatId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

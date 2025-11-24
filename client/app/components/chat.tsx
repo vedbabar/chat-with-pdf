@@ -7,6 +7,11 @@ import { useAuth } from '@clerk/nextjs';
 import { Send, FileText, User, Bot, ChevronDown, BookOpen, Quote, AlertCircle, Sparkles } from 'lucide-react';
 import { ChatMessagesSkeleton } from './skeletons';
 
+// ⭐ DEFINE API URL BASED ON ENVIRONMENT
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://chat-with-pdf-readme-generator.vercel.app' 
+  : 'http://localhost:8000';
+
 interface Doc {
   pageContent?: string;
   metadata?: {
@@ -78,7 +83,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
       
       try {
         const token = await getToken();
-        const response = await fetch(`http://localhost:8000/chats/${chatId}/messages`, {
+        // ⭐ UPDATED URL
+        const response = await fetch(`${API_BASE_URL}/chats/${chatId}/messages`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -123,7 +129,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
 
     try {
       const token = await getToken();
-      const response = await fetch(`http://localhost:8000/chat?message=${encodeURIComponent(userMessage.content || '')}&chatId=${chatId}`, {
+      // ⭐ UPDATED URL
+      const response = await fetch(`${API_BASE_URL}/chat?message=${encodeURIComponent(userMessage.content || '')}&chatId=${chatId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

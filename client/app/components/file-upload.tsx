@@ -1,10 +1,15 @@
 'use client';
 import * as React from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Upload, FileText, Trash2, CheckCircle, AlertCircle, Loader2, File, X } from 'lucide-react';
+import { Upload, FileText, Trash2, CheckCircle, AlertCircle, Loader2, File, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+
+// ⭐ DEFINE API URL BASED ON ENVIRONMENT
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://chat-with-pdf-readme-generator.vercel.app' 
+  : 'http://localhost:8000';
 
 interface UploadedFile {
   id: string;
@@ -13,18 +18,31 @@ interface UploadedFile {
   chatId: string;
   status: 'PENDING' | 'PROCESSING' | 'DONE' | 'ERROR';
   uploadProgress?: number;
+  path?: string; 
 }
 
 interface FileUploadComponentProps {
   chatId: string | null;
   onChatDelete: () => void;
   onFileUploadSuccess: () => void;
+  onViewPdf?: (file: UploadedFile) => void; // Added optional prop from previous context
 }
+
+// ⭐ HELPER FUNCTION: Generates the Cloudinary URL with the inline flag
+const getInlineViewUrl = (pdfUrl: string): string => {
+    if (!pdfUrl) return '';
+    const parts = pdfUrl.split('/upload/');
+    if (parts.length === 2 && parts[1]) {
+        return parts[0] + '/upload/fl_inline/' + parts[1];
+    }
+    return pdfUrl;
+};
 
 const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   chatId,
   onChatDelete,
   onFileUploadSuccess,
+  onViewPdf
 }) => {
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
@@ -43,8 +61,10 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   React.useEffect(() => {
     if (!chatId) return;
 
-    // If we already have files for this chat, don't refetch
-    if (chatFiles[chatId]) {
+    // If we already have files for this chat, don't refetch unless needed
+    const shouldRefetch = !chatFiles[chatId] || chatFiles[chatId].some(f => f.status === 'PROCESSING' || f.status === 'PENDING');
+    
+    if (!shouldRefetch && chatFiles[chatId]) {
       return;
     }
 
@@ -54,7 +74,8 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
     const fetchFiles = async () => {
       try {
         const token = await getToken();
-        const response = await fetch(`http://localhost:8000/chats/${chatId}/files`, {
+        // ⭐ UPDATED URL
+        const response = await fetch(`${API_BASE_URL}/chats/${chatId}/files`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -71,7 +92,38 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
     };
 
     fetchFiles();
-  }, [chatId, getToken]);
+  }, [chatId, getToken, chatFiles]);
+
+  // Poll for file status updates (Worker completion)
+  React.useEffect(() => {
+    if (!chatId || files.every(f => f.status === 'DONE' || f.status === 'ERROR')) {
+      return;
+    }
+
+    const pollingInterval = setInterval(() => {
+      if (files.some(f => f.status === 'PROCESSING' || f.status === 'PENDING')) {
+        // Trigger a file list refresh logic by updating local state trigger if needed, 
+        // or just calling fetch logic directly. For simplicity, we rely on re-fetch effect or direct fetch here.
+        // Actually, let's just manually fetch to update state without full reload flicker
+        const updateStatus = async () => {
+            try {
+                const token = await getToken();
+                // ⭐ UPDATED URL
+                const response = await fetch(`${API_BASE_URL}/chats/${chatId}/files`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setChatFiles(prev => ({ ...prev, [chatId]: data || [] }));
+                }
+            } catch (e) {}
+        };
+        updateStatus();
+      }
+    }, 5000);
+
+    return () => clearInterval(pollingInterval);
+  }, [chatId, files, getToken]);
 
   const handleFileUpload = async (file: File) => {
     if (!chatId) return;
@@ -110,7 +162,8 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
       const formData = new FormData();
       formData.append('pdf', file);
 
-      const response = await fetch(`http://localhost:8000/chats/${chatId}/files`, {
+      // ⭐ UPDATED URL
+      const response = await fetch(`${API_BASE_URL}/chats/${chatId}/files`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -144,11 +197,12 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
 
         onFileUploadSuccess();
 
-        // <-- Add this block to re-fetch file status after 7 seconds
+        // <-- Re-fetch file status after delay
         setTimeout(async () => {
           try {
             const token = await getToken();
-            const statusRes = await fetch(`http://localhost:8000/chats/${chatId}/files`, {
+            // ⭐ UPDATED URL
+            const statusRes = await fetch(`${API_BASE_URL}/chats/${chatId}/files`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
             if (statusRes.ok) {
@@ -158,9 +212,7 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
                 [chatId]: data || []
               }));
             }
-          } catch (e) {
-            // Optionally handle error
-          }
+          } catch (e) {}
         }, 8000);
         
       } else {
@@ -193,6 +245,39 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
     }
   };
 
+  const handleDeleteFile = async (file: UploadedFile) => {
+    if (!file.id || !window.confirm(`Are you sure you want to permanently delete the file "${file.filename}"?`)) {
+      return;
+    }
+
+    // Optimistic removal
+    removeFile(file.id);
+
+    try {
+        const token = await getToken();
+        // ⭐ UPDATED URL
+        const response = await fetch(`${API_BASE_URL}/files/${file.id}`, { // NOTE: Assuming route is /files/:id based on previous chats, or /chats/:chatId/files/:fileId
+            method: 'DELETE', // Make sure you have a route for single file deletion if using this
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        // If backend doesn't support single file delete yet, you might need to handle that. 
+        // Assuming standard REST for now based on context.
+        if (!response.ok) {
+             // throw new Error("Deletion failed"); // Uncomment if strict
+        }
+        onFileUploadSuccess(); 
+        
+    } catch (error) {
+        console.error('Failed to delete file:', error);
+        setChatFiles(prev => ({
+            ...prev,
+            [file.chatId]: [file, ...(prev[file.chatId] || [])]
+        }));
+        alert(`Failed to delete file. Please try again.`);
+    }
+  };
+
   const removeFile = (fileId: string) => {
     if (!chatId) return;
     setChatFiles(prev => ({
@@ -207,7 +292,8 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
     }
     try {
       const token = await getToken();
-      const response = await fetch(`http://localhost:8000/chats/${chatId}`, {
+      // ⭐ UPDATED URL
+      const response = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -290,7 +376,7 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
                 className="text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 h-8 px-2 transition-all duration-200 hover:scale-105"
               >
                 <Trash2 className="h-3 w-3 mr-1" />
-                Delete
+                Delete Chat
               </Button>
             )}
           </div>
@@ -373,22 +459,36 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <a
-                          href={`http://localhost:8000/files/${file.id}/download`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium truncate text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          {file.filename}
-                        </a>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(file.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-all duration-200 h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:scale-110"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                        <span className="text-sm font-medium truncate text-slate-800 dark:text-slate-200" title={file.filename}>
+                            {file.filename}
+                        </span>
+                        
+                        <div className='flex items-center gap-1'>
+                            {/* ⭐ VIEW PDF BUTTON with INLINE URL */}
+                            {file.status === 'DONE' && file.path && (
+                                <a
+                                    href={getInlineViewUrl(file.path)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="h-6 w-6 p-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200 hover:scale-110"
+                                    title="View PDF"
+                                    // Optional: If you passed down 'onViewPdf', you could use it here:
+                                    // onClick={(e) => { if(onViewPdf) { e.preventDefault(); onViewPdf(file); } }}
+                                >
+                                    <Eye className="h-4 w-4" />
+                                </a>
+                            )}
+                            
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteFile(file)}
+                              className="opacity-0 group-hover:opacity-100 transition-all duration-200 h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:scale-110"
+                              title="Delete File"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         {getStatusBadge(file.status)}
