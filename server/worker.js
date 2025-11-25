@@ -5,11 +5,20 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"; // ⭐ ADDED for chunking
 import { PrismaClient } from "@prisma/client";
+import http from 'http';
 import "dotenv/config";
-import fs from "fs/promises"; // ⭐ ADDED for local file system (temp file)
-import path from "path"; // ⭐ ADDED for path resolving
-import axios from "axios"; // ⭐ ADDED for downloading files
-import os from "os"; // ⭐ ADDED for temp directory
+import fs from "fs/promises";
+import path from "path"; 
+import axios from "axios";
+import os from "os"; 
+
+
+const server = http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('Worker is running!');
+});
+server.listen(process.env.PORT || 10000);
+console.log("Dummy server listening for Render...");
 
 
 // -------------------- INITIALIZATION --------------------
@@ -30,7 +39,6 @@ const worker = new Worker(
   async (job) => {
     console.log(`📥 New Job ${job.id}: Processing...`, job.data);
 
-    // ⭐ CHANGED: Get 'url' and 'publicId' instead of 'path'
     const { url, chatId, fileId } = JSON.parse(job.data);
 
     if (!url || !chatId || !fileId) {
@@ -40,13 +48,11 @@ const worker = new Worker(
     let tempFilePath = ''; 
 
     try {
-      // 1️⃣ Mark file as PROCESSING
       await prisma.file.update({
         where: { id: fileId },
         data: { status: "PROCESSING" },
       });
 
-      // ⭐ ADDED: 2️⃣ Download file from URL to temporary location
       const response = await axios.get(url, {
           responseType: 'arraybuffer', 
           maxContentLength: Infinity,
