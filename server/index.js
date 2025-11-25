@@ -55,16 +55,34 @@ const upload = multer({
 // -------------------- EXPRESS --------------------
 const app = express();
 
-// ⭐ 1. CORS MUST BE FIRST (AND ALLOW ALL ORIGINS)
-app.use(cors({
-  origin: "https://chat-with-pdf-l3hy.vercel.app", 
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  credentials: true
-}));
+// // ⭐ 1. CORS MUST BE FIRST (AND ALLOW ALL ORIGINS)
+// app.use(cors({
+//   origin: "https://chat-with-pdf-l3hy.vercel.app", 
+//   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+//   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+//   credentials: true
+// }));
 
-// ⭐ 2. HANDLE PREFLIGHT REQUESTS EXPLICITLY
-app.options("*", cors());
+// // ⭐ 2. HANDLE PREFLIGHT REQUESTS EXPLICITLY
+// app.options("*", cors());
+
+// app.use(express.json());
+app.use((req, res, next) => {
+  // 1. Allow ANYONE to talk to this API
+  res.header("Access-Control-Allow-Origin", "*"); 
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // 2. If it's a Preflight (OPTIONS), answer 200 OK immediately and STOP.
+  // This prevents Clerk from seeing this request and blocking it.
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  
+  // 3. If it's not OPTIONS, let it pass to Auth
+  next();
+});
 
 app.use(express.json());
 
