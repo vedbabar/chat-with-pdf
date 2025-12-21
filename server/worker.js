@@ -30,7 +30,7 @@ const REDIS_CONNECTION_URL = process.env.UPSTASH_REDIS_URL || process.env.REDIS_
 
 const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: process.env.GOOGLE_API_KEY,
-  model: "text-embedding-004",
+  model: "gemini-embedding-001",
 });
 
 // -------------------- WORKER --------------------
