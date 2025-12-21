@@ -89,7 +89,7 @@ app.use(express.json());
 // -------------------- EMBEDDINGS --------------------
 const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: process.env.GOOGLE_API_KEY,
-  model: "text-embedding-004",
+  model: "gemini-embedding-001",
 });
 
 
