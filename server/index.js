@@ -412,95 +412,219 @@ app.delete("/chats/:chatId", async (req, res) => {
 });
 
 // ---------- CHAT (GET chat detail & RAG query) ----------
+// app.get("/chat", async (req, res) => {
+//     // ... (Logic remains the same, as it only uses embeddings)
+//     try {
+//         const { userId } = req.auth;
+//         console.log("🔍 Incoming query:", req.query);
+//         const { message: userQuery, chatId } = req.query;
+
+//         if (!chatId) return res.status(400).json({ error: "chatId is required" });
+//         if (!userQuery) return res.status(400).json({ error: "message is required" });
+
+//         const chat = await prisma.chat.findUnique({ where: { id: String(chatId) } });
+//         if (!chat || chat.userId !== userId) {
+//             return res.status(404).json({ error: "Chat not found or access denied" });
+//         }
+
+//         // Save user message
+//         await prisma.message.create({
+//             data: {
+//                 chatId: String(chatId),
+//                 role: "user",
+//                 content: String(userQuery),
+//             },
+//         });
+
+//         // Get chat history
+//         const chatHistory = await prisma.message.findMany({
+//             where: { chatId: String(chatId) },
+//             orderBy: { createdAt: 'asc' },
+//             take: 10
+//         });
+
+//         // Vector search using QdrantVectorStore
+//         let vectorResults = [];
+//         try {
+//             const vectorStore = await QdrantVectorStore.fromExistingCollection(
+//                 embeddings,
+//                 {
+//                     url: process.env.QDRANT_URL || "http://localhost:6333",
+//                     apiKey: process.env.QDRANT_API_KEY,
+//                     collectionName: "langchainjs-testing",
+//                 }
+//             );
+
+//             const retriever = vectorStore.asRetriever({
+//                 k: 5,
+//                 filter: {
+//                     must: [{ key: "metadata.chatId", match: { value: String(chatId) } }]
+//                 }
+//             });
+
+//             vectorResults = await retriever.invoke(userQuery);
+//             console.log(`📄 Found ${vectorResults.length} relevant documents`);
+//         } catch (vectorError) {
+//             console.error('❌ Vector search error:', vectorError);
+//         }
+
+//         // Prepare prompt and call Gemini
+//         const enhancedPrompt = createEnhancedPrompt(vectorResults, userQuery, chatHistory);
+//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+//         const result = await model.generateContent({
+//             contents: [{ role: 'user', parts: [{ text: enhancedPrompt }] }],
+//             generationConfig: {
+//                 temperature: 0.3,
+//                 maxOutputTokens: 2048,
+//             },
+//         });
+
+//         // Safe parse to avoid crashes when API returns unexpected structure
+//         const aiResponse =
+//             result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ??
+//             "⚠️ AI could not generate a response. Try again.";
+
+//         // Save assistant message
+//         await prisma.message.create({
+//             data: {
+//                 chatId: String(chatId),
+//                 role: "assistant",
+//                 content: aiResponse,
+//                 documents: vectorResults,
+//             },
+//         });
+
+//         return res.json({ message: aiResponse, docs: vectorResults });
+
+//     } catch (error) {
+//         console.error("❌ Chat error:", error);
+//         return res.status(500).json({ error: "Failed to process chat message" });
+//     }
+// });
+
+// ---------- CHAT (STREAMING) ----------
 app.get("/chat", async (req, res) => {
-    // ... (Logic remains the same, as it only uses embeddings)
-    try {
-        const { userId } = req.auth;
-        console.log("🔍 Incoming query:", req.query);
-        const { message: userQuery, chatId } = req.query;
+    try {
+        const { userId } = req.auth;
+        const { message: userQuery, chatId } = req.query;
 
-        if (!chatId) return res.status(400).json({ error: "chatId is required" });
-        if (!userQuery) return res.status(400).json({ error: "message is required" });
+        // 1. Basic Validation
+        if (!chatId) return res.status(400).json({ error: "chatId is required" });
+        if (!userQuery) return res.status(400).json({ error: "message is required" });
 
-        const chat = await prisma.chat.findUnique({ where: { id: String(chatId) } });
-        if (!chat || chat.userId !== userId) {
-            return res.status(404).json({ error: "Chat not found or access denied" });
-        }
+        const chat = await prisma.chat.findUnique({ where: { id: String(chatId) } });
+        if (!chat || chat.userId !== userId) {
+            return res.status(404).json({ error: "Chat not found or access denied" });
+        }
 
-        // Save user message
-        await prisma.message.create({
-            data: {
-                chatId: String(chatId),
-                role: "user",
-                content: String(userQuery),
-            },
-        });
+        // 2. Save USER message to DB immediately
+        await prisma.message.create({
+            data: {
+                chatId: String(chatId),
+                role: "user",
+                content: String(userQuery),
+            },
+        });
 
-        // Get chat history
-        const chatHistory = await prisma.message.findMany({
-            where: { chatId: String(chatId) },
-            orderBy: { createdAt: 'asc' },
-            take: 10
-        });
+        // 3. Fetch History & Context (Same logic as before)
+        const chatHistory = await prisma.message.findMany({
+            where: { chatId: String(chatId) },
+            orderBy: { createdAt: 'asc' },
+            take: 10
+        });
 
-        // Vector search using QdrantVectorStore
-        let vectorResults = [];
-        try {
-            const vectorStore = await QdrantVectorStore.fromExistingCollection(
-                embeddings,
-                {
-                    url: process.env.QDRANT_URL || "http://localhost:6333",
-                    apiKey: process.env.QDRANT_API_KEY,
-                    collectionName: "langchainjs-testing",
-                }
-            );
+        // Vector Search
+        let vectorResults = [];
+        try {
+            const vectorStore = await QdrantVectorStore.fromExistingCollection(
+                embeddings,
+                {
+                    url: process.env.QDRANT_URL || "http://localhost:6333",
+                    apiKey: process.env.QDRANT_API_KEY,
+                    collectionName: "langchainjs-testing",
+                }
+            );
 
-            const retriever = vectorStore.asRetriever({
-                k: 5,
-                filter: {
-                    must: [{ key: "metadata.chatId", match: { value: String(chatId) } }]
-                }
-            });
+            const retriever = vectorStore.asRetriever({
+                k: 5,
+                filter: {
+                    must: [{ key: "metadata.chatId", match: { value: String(chatId) } }]
+                }
+            });
 
-            vectorResults = await retriever.invoke(userQuery);
-            console.log(`📄 Found ${vectorResults.length} relevant documents`);
-        } catch (vectorError) {
-            console.error('❌ Vector search error:', vectorError);
-        }
+            vectorResults = await retriever.invoke(userQuery);
+            console.log(`📄 Found ${vectorResults.length} relevant documents`);
+        } catch (vectorError) {
+            console.error('❌ Vector search error:', vectorError);
+        }
 
-        // Prepare prompt and call Gemini
-        const enhancedPrompt = createEnhancedPrompt(vectorResults, userQuery, chatHistory);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        // ---------------------------------------------------------
+        // ⭐ STREAMING RESPONSE START
+        // ---------------------------------------------------------
+        
+        // A. Set Headers for SSE (Server-Sent Events)
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Connection", "keep-alive");
+        res.flushHeaders(); // Flush headers immediately
 
-        const result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: enhancedPrompt }] }],
-            generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 2048,
-            },
-        });
+        // B. Send the Sources/Docs immediately
+        // Format: data: { JSON } \n\n
+        const sourcesData = JSON.stringify({ type: 'sources', docs: vectorResults });
+        res.write(`data: ${sourcesData}\n\n`);
 
-        // Safe parse to avoid crashes when API returns unexpected structure
-        const aiResponse =
-            result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ??
-            "⚠️ AI could not generate a response. Try again.";
+        // C. Initialize Gemini Model & Prompt
+        const enhancedPrompt = createEnhancedPrompt(vectorResults, userQuery, chatHistory);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        // Save assistant message
-        await prisma.message.create({
-            data: {
-                chatId: String(chatId),
-                role: "assistant",
-                content: aiResponse,
-                documents: vectorResults,
-            },
-        });
+        // D. Start the Stream
+        const result = await model.generateContentStream({
+            contents: [{ role: 'user', parts: [{ text: enhancedPrompt }] }],
+            generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 2048,
+            },
+        });
 
-        return res.json({ message: aiResponse, docs: vectorResults });
+        let fullAiResponse = "";
 
-    } catch (error) {
-        console.error("❌ Chat error:", error);
-        return res.status(500).json({ error: "Failed to process chat message" });
-    }
+        // E. Iterate through chunks and send to client
+        for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            fullAiResponse += chunkText;
+            
+            // Send chunk to frontend
+            const tokenData = JSON.stringify({ type: 'token', text: chunkText });
+            res.write(`data: ${tokenData}\n\n`);
+        }
+
+        // F. Stream Finished
+        res.write(`data: [DONE]\n\n`);
+        
+        // 4. Save ASSISTANT message to DB (After stream is complete)
+        await prisma.message.create({
+            data: {
+                chatId: String(chatId),
+                role: "assistant",
+                content: fullAiResponse,
+                documents: vectorResults,
+            },
+        });
+
+        res.end(); // Close connection
+
+    } catch (error) {
+        console.error("❌ Chat error:", error);
+        
+        // If headers are already sent, we must stream the error
+        if (res.headersSent) {
+            res.write(`data: ${JSON.stringify({ type: 'error', message: "Failed to generate response." })}\n\n`);
+            res.end();
+        } else {
+            return res.status(500).json({ error: "Failed to process chat message" });
+        }
+    }
 });
 
 // ---------- DOWNLOAD FILE (Now a Redirect) ----------
