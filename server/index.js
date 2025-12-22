@@ -94,6 +94,26 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
 
 
 
+
+
+
+async function createIndexes() {
+  try {
+    const result = await qdrantClient.createPayloadIndex("langchainjs-testing", {
+      field_name: "metadata.chatId",
+      field_schema: "keyword", // Important: Use 'keyword' for IDs (strings), not 'text'
+    });
+    console.log("✅ Index created for metadata.chatId");
+  } catch (e) {
+    console.log("ℹ️ Index might already exist or failed:", e.message);
+  }
+}
+
+// Call it once
+createIndexes();
+
+
+
 // -------------------- PROMPT (KEPT FOR COMPLETENESS) --------------------
 const createEnhancedPrompt = (context, userQuery, chatHistory = []) => {
   const contextText = context.map(doc =>
