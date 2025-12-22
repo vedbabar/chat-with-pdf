@@ -24,7 +24,7 @@ console.log("Dummy server listening for Render...");
 // -------------------- INITIALIZATION --------------------
 const prisma = new PrismaClient();
 
-const GEMINI_EMBEDDING_SIZE = 768;
+const GEMINI_EMBEDDING_SIZE = 3072;
 const QDRANT_COLLECTION = process.env.QDRANT_COLLECTION_NAME || "langchainjs-testing";
 const REDIS_CONNECTION_URL = process.env.UPSTASH_REDIS_URL || process.env.REDIS_URL;
 
