@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
-import { ClerkProvider, SignedIn, SignedOut, SignUp } from '@clerk/nextjs';
+import { ClerkProvider, SignedIn, SignedOut } from '@clerk/nextjs';
+import LandingPage from './landing-page';
 import './globals.css';
 
 const geistSans = Geist({
@@ -9,8 +10,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'DocuChat AI',
-  description: 'Chat with your PDF documents',
+  title: 'Chat-with-PDF - AI-Powered Document Assistant',
+  description: 'Transform your PDFs into interactive conversations with AI',
 };
 
 export default function RootLayout({
@@ -22,14 +23,12 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} antialiased`}>
-          {/* For signed-out users, show a full-page, centered sign-up form. */}
+          {/* For signed-out users, show the beautiful landing page */}
           <SignedOut>
-            <main className="flex items-center justify-center h-screen bg-slate-100 dark:bg-slate-900">
-              <SignUp />
-            </main>
+            <LandingPage />
           </SignedOut>
-
-          {/* For signed-in users, render the main application dashboard. */}
+          
+          {/* For signed-in users, render the main application dashboard */}
           <SignedIn>
             {children}
           </SignedIn>
@@ -38,4 +37,3 @@ export default function RootLayout({
     </ClerkProvider>
   );
 }
-
