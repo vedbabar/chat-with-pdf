@@ -225,9 +225,13 @@ app.post("/chats/:chatId/files", upload.single("pdf"), async (req, res) => {
         const cloudinaryResult = await new Promise((resolve, reject) => {
             const stream = cloudinary.v2.uploader.upload_stream(
                 {
-                    resource_type: 'raw', // Crucial for PDFs
-                    folder: `docuchat/${userId}/${chatId}`,
-                    public_id: `${Date.now()}-${req.file.originalname.replace(/\.pdf$/, '')}`,
+                    resource_type: 'auto',  // Changed from 'raw' to 'auto'
+                    format: 'pdf',          // Explicitly tell Cloudinary it's a PDF
+                    folder: `docuchat/${userId}/${chatId}`,
+                    public_id: `${Date.now()}-${req.file.originalname.replace(/\.pdf$/, '')}`,
+                    // Add these flags to ensure it's viewable in browser
+                    flags: "attachment:false", 
+                    access_mode: 'public'
 
                 },
                 (error, result) => {
