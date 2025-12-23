@@ -720,7 +720,7 @@ export default function Dashboard() {
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="fixed left-4 top-1/2 z-20 transform -translate-y-1/2 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-full shadow-xl p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+          className="fixed left-4 top-1/2 z-20 transform -translate-y-1/2 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-full shadow-xl p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition animate-fade-in"
           aria-label="Expand sidebar"
         >
           <PanelLeft className="h-5 w-5 text-slate-600 dark:text-slate-400" />
@@ -809,51 +809,13 @@ export default function Dashboard() {
         {!filePanelOpen && (
           <button
             onClick={() => setFilePanelOpen(true)}
-            className="fixed right-4 top-1/2 z-20 transform -translate-y-1/2 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-full shadow-xl p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            className="fixed right-4 top-1/2 z-20 transform -translate-y-1/2 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-full shadow-xl p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition animate-fade-in"
             aria-label="Expand file panel"
           >
             <PanelRight className="h-5 w-5 text-slate-600 dark:text-slate-400" />
           </button>
         )}
       </div>
-
-      {/* Custom Scrollbar Styles */}
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgb(148 163 184 / 0.5);
-          border-radius: 4px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgb(148 163 184 / 0.7);
-        }
-        
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgb(71 85 105 / 0.5);
-        }
-        
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgb(71 85 105 / 0.7);
-        }
-
-        /* Firefox scrollbar */
-        .custom-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: rgb(148 163 184 / 0.5) transparent;
-        }
-        
-        .dark .custom-scrollbar {
-          scrollbar-color: rgb(71 85 105 / 0.5) transparent;
-        }
-      `}</style>
     </div>
   );
 }
