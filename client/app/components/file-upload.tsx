@@ -25,14 +25,28 @@ interface FileUploadComponentProps {
   onViewPdf?: (file: UploadedFile) => void;
 }
 
-const getInlineViewUrl = (pdfUrl: string): string => {
-    if (!pdfUrl) return '';
-    const parts = pdfUrl.split('/upload/');
-    if (parts.length === 2 && parts[1]) {
-        return parts[0] + '/upload/fl_inline/' + parts[1];
-    }
-    return pdfUrl;
-};
+// const getInlineViewUrl = (pdfUrl: string): string => {
+//     if (!pdfUrl) return '';
+//     const parts = pdfUrl.split('/upload/');
+//     if (parts.length === 2 && parts[1]) {
+//         return parts[0] + '/upload/fl_inline/' + parts[1];
+//     }
+//     return pdfUrl;
+// };
+
+const handleViewPdf = (file: UploadedFile) => {
+    if (!file.path) return;
+
+    // A. Ensure HTTPS
+    const secureUrl = file.path.replace("http://", "https://");
+
+    // B. Use Google Docs Viewer
+    // This works even if Cloudinary set the file to "force download" (raw)
+    const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(secureUrl)}&embedded=false`;
+
+    // C. Open in new tab
+    window.open(googleViewerUrl, '_blank', 'noopener,noreferrer');
+  };
 
 const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   chatId,
@@ -416,15 +430,14 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
                         
                         <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
                             {file.status === 'DONE' && file.path && (
-                                <a
-                                    href={getInlineViewUrl(file.path)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition transform hover:scale-110"
-                                    title="View PDF"
-                                >
-                                    <Eye className="h-4 w-4" />
-                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => handleViewPdf(file)}
+                                  className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition transform hover:scale-110"
+                                  title="View PDF"
+                              >
+                                  <Eye className="h-4 w-4" />
+                              </button>
                             )}
                             
                             <button
