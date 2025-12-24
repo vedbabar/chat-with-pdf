@@ -11,8 +11,8 @@ import 'dotenv/config';
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 import { ClerkExpressWithAuth } from '@clerk/clerk-sdk-node';
 import { QdrantClient } from "@qdrant/js-client-rest";
-import cloudinary from "cloudinary"; // ⭐ ADDED
-import streamifier from "streamifier"; // ⭐ ADDED
+import cloudinary from "cloudinary";
+import streamifier from "streamifier";
 
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
@@ -25,7 +25,7 @@ const qdrantClient = new QdrantClient({
     apiKey: process.env.QDRANT_API_KEY, 
 });
 
-// ⭐ CLOUDINARY CONFIG
+// CLOUDINARY CONFIG
 cloudinary.v2.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -40,7 +40,6 @@ const queue = new Queue("file-upload-queue", {
 });
 
 // -------------------- MULTER --------------------
-// ⭐ CHANGE: Use memory storage for diskless deployment
 const storage = multer.memoryStorage(); 
 
 const upload = multer({
@@ -55,17 +54,6 @@ const upload = multer({
 // -------------------- EXPRESS --------------------
 const app = express();
 
-// // ⭐ 1. CORS MUST BE FIRST (AND ALLOW ALL ORIGINS)
-// app.use(cors({
-//   origin: "https://chat-with-pdf-l3hy.vercel.app", 
-//   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-//   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-//   credentials: true
-// }));
-
-// // ⭐ 2. HANDLE PREFLIGHT REQUESTS EXPLICITLY
-// app.options("*", cors());
-
 // app.use(express.json());
 app.use((req, res, next) => {
   // 1. Allow ANYONE to talk to this API
@@ -79,8 +67,6 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-  
-  // 3. If it's not OPTIONS, let it pass to Auth
   next();
 });
 
@@ -93,15 +79,11 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
 });
 
 
-
-
-
-
 async function createIndexes() {
   try {
     const result = await qdrantClient.createPayloadIndex("langchainjs-testing", {
       field_name: "metadata.chatId",
-      field_schema: "keyword", // Important: Use 'keyword' for IDs (strings), not 'text'
+      field_schema: "keyword",
     });
     console.log("✅ Index created for metadata.chatId");
   } catch (e) {
@@ -109,12 +91,9 @@ async function createIndexes() {
   }
 }
 
-// Call it once
 createIndexes();
 
-
-
-// -------------------- PROMPT (KEPT FOR COMPLETENESS) --------------------
+// -------------------- Custom PROMPT --------------------
 const createEnhancedPrompt = (context, userQuery, chatHistory = []) => {
   const contextText = context.map(doc =>
     `📄 **Source**: ${doc.metadata?.source || 'Document'}
@@ -159,15 +138,11 @@ ${historyText ? `**RECENT CONVERSATION:**\n${historyText}\n` : ''}
 
 // -------------------- ROUTES --------------------
 
-// ---------- PUBLIC ROUTE ----------
+// Tesing route !!
 app.get("/", (req, res) => {
   res.json({ status: "Chat-PDF API Server Running with Google AI!" });
 });
 // -------------------- AUTH --------------------
-// const clerkAuthMiddleware = ClerkExpressRequireAuth();
-// // ---------- PROTECTED ROUTES MIDDLEWARE ----------
-// app.use(clerkAuthMiddleware);
-// app.use(ClerkExpressWithAuth());
 app.use(ClerkExpressWithAuth());
 // ---------- CREATE CHAT ----------
 app.post("/chats", async (req, res) => {
@@ -221,15 +196,13 @@ app.post("/chats/:chatId/files", upload.single("pdf"), async (req, res) => {
         const chat = await prisma.chat.findFirst({ where: { id: chatId, userId } });
         if (!chat) return res.status(404).json({ error: "Chat not found or access denied" });
 
-        // ⭐ CLOUDINARY UPLOAD LOGIC
         const cloudinaryResult = await new Promise((resolve, reject) => {
             const stream = cloudinary.v2.uploader.upload_stream(
                 {
-                    resource_type: 'auto',  // Changed from 'raw' to 'auto'
-                    format: 'pdf',          // Explicitly tell Cloudinary it's a PDF
+                    resource_type: 'auto', 
+                    format: 'pdf',         
                     folder: `docuchat/${userId}/${chatId}`,
                     public_id: `${Date.now()}-${req.file.originalname.replace(/\.pdf$/, '')}`,
-                    // Add these flags to ensure it's viewable in browser
                     flags: "attachment:false", 
                     access_mode: 'public'
 
@@ -254,7 +227,7 @@ app.post("/chats/:chatId/files", upload.single("pdf"), async (req, res) => {
                 filename: req.file.originalname,
                 path: fileURL,
                 chatId,
-                status: "PROCESSING",
+                status: "PROCESSING",//set this currently , the worker will change it to "Ready" when the file is actually processed
                 publicId: publicId, 
             },
         });
@@ -281,7 +254,6 @@ app.post("/chats/:chatId/files", upload.single("pdf"), async (req, res) => {
 
 // ---------- GET FILES FOR CHAT ----------
 app.get("/chats/:chatId/files", async (req, res) => {
-    // ... (Logic remains the same)
     try {
         const { chatId } = req.params;
         const { userId } = req.auth;
@@ -303,7 +275,6 @@ app.get("/chats/:chatId/files", async (req, res) => {
 
 // ---------- GET CHAT MESSAGES ----------
 app.get("/chats/:id/messages", async (req, res) => {
-    // ... (Logic remains the same)
     try {
         const chatId = req.params.id;
         const { userId } = req.auth;
@@ -325,7 +296,6 @@ app.get("/chats/:id/messages", async (req, res) => {
 
 // ---------- GET SPECIFIC CHAT DETAILS ----------
 app.get("/chats/:id", async (req, res) => {
-    // ... (Logic remains the same)
     try {
         const { id } = req.params;
         const { userId } = req.auth;
@@ -347,7 +317,6 @@ app.get("/chats/:id", async (req, res) => {
 
 // ---------- UPDATE CHAT NAME ----------
 app.patch("/chats/:chatId", async (req, res) => {
-    // ... (Logic remains the same)
     try {
         const { chatId } = req.params;
         const { name } = req.body;
@@ -380,7 +349,6 @@ app.delete("/chats/:chatId", async (req, res) => {
         const chat = await prisma.chat.findFirst({ where: { id: chatId, userId: userId } });
         if (!chat) return res.status(404).json({ error: "Chat not found or access denied" });
 
-        // ⭐ CLOUDINARY DELETE LOGIC
         const filesToDelete = await prisma.file.findMany({ where: { chatId } });
         for (const file of filesToDelete) {
             if (file.publicId) {
@@ -393,7 +361,6 @@ app.delete("/chats/:chatId", async (req, res) => {
                 }
             }
         }
-        // ⭐ END CLOUDINARY DELETE
 
         // Delete vectors in Qdrant that belong to this chat
         try {
@@ -414,98 +381,6 @@ app.delete("/chats/:chatId", async (req, res) => {
         return res.status(500).json({ error: "Failed to delete chat" });
     }
 });
-
-// ---------- CHAT (GET chat detail & RAG query) ----------
-// app.get("/chat", async (req, res) => {
-//     // ... (Logic remains the same, as it only uses embeddings)
-//     try {
-//         const { userId } = req.auth;
-//         console.log("🔍 Incoming query:", req.query);
-//         const { message: userQuery, chatId } = req.query;
-
-//         if (!chatId) return res.status(400).json({ error: "chatId is required" });
-//         if (!userQuery) return res.status(400).json({ error: "message is required" });
-
-//         const chat = await prisma.chat.findUnique({ where: { id: String(chatId) } });
-//         if (!chat || chat.userId !== userId) {
-//             return res.status(404).json({ error: "Chat not found or access denied" });
-//         }
-
-//         // Save user message
-//         await prisma.message.create({
-//             data: {
-//                 chatId: String(chatId),
-//                 role: "user",
-//                 content: String(userQuery),
-//             },
-//         });
-
-//         // Get chat history
-//         const chatHistory = await prisma.message.findMany({
-//             where: { chatId: String(chatId) },
-//             orderBy: { createdAt: 'asc' },
-//             take: 10
-//         });
-
-//         // Vector search using QdrantVectorStore
-//         let vectorResults = [];
-//         try {
-//             const vectorStore = await QdrantVectorStore.fromExistingCollection(
-//                 embeddings,
-//                 {
-//                     url: process.env.QDRANT_URL || "http://localhost:6333",
-//                     apiKey: process.env.QDRANT_API_KEY,
-//                     collectionName: "langchainjs-testing",
-//                 }
-//             );
-
-//             const retriever = vectorStore.asRetriever({
-//                 k: 5,
-//                 filter: {
-//                     must: [{ key: "metadata.chatId", match: { value: String(chatId) } }]
-//                 }
-//             });
-
-//             vectorResults = await retriever.invoke(userQuery);
-//             console.log(`📄 Found ${vectorResults.length} relevant documents`);
-//         } catch (vectorError) {
-//             console.error('❌ Vector search error:', vectorError);
-//         }
-
-//         // Prepare prompt and call Gemini
-//         const enhancedPrompt = createEnhancedPrompt(vectorResults, userQuery, chatHistory);
-//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-//         const result = await model.generateContent({
-//             contents: [{ role: 'user', parts: [{ text: enhancedPrompt }] }],
-//             generationConfig: {
-//                 temperature: 0.3,
-//                 maxOutputTokens: 2048,
-//             },
-//         });
-
-//         // Safe parse to avoid crashes when API returns unexpected structure
-//         const aiResponse =
-//             result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ??
-//             "⚠️ AI could not generate a response. Try again.";
-
-//         // Save assistant message
-//         await prisma.message.create({
-//             data: {
-//                 chatId: String(chatId),
-//                 role: "assistant",
-//                 content: aiResponse,
-//                 documents: vectorResults,
-//             },
-//         });
-
-//         return res.json({ message: aiResponse, docs: vectorResults });
-
-//     } catch (error) {
-//         console.error("❌ Chat error:", error);
-//         return res.status(500).json({ error: "Failed to process chat message" });
-//     }
-// });
 
 // ---------- CHAT (STREAMING) ----------
 app.get("/chat", async (req, res) => {
@@ -549,24 +424,18 @@ app.get("/chat", async (req, res) => {
                     collectionName: "langchainjs-testing",
                 }
             );
-
             const retriever = vectorStore.asRetriever({
                 k: 5,
                 filter: {
                     must: [{ key: "metadata.chatId", match: { value: String(chatId) } }]
                 }
             });
-
             vectorResults = await retriever.invoke(userQuery);
             console.log(`📄 Found ${vectorResults.length} relevant documents`);
         } catch (vectorError) {
             console.error('❌ Vector search error:', vectorError);
         }
 
-        // ---------------------------------------------------------
-        // ⭐ STREAMING RESPONSE START
-        // ---------------------------------------------------------
-        
         // A. Set Headers for SSE (Server-Sent Events)
         res.setHeader("Content-Type", "text/event-stream");
         res.setHeader("Cache-Control", "no-cache");
@@ -586,8 +455,8 @@ app.get("/chat", async (req, res) => {
         const result = await model.generateContentStream({
             contents: [{ role: 'user', parts: [{ text: enhancedPrompt }] }],
             generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 2048,
+                temperature: 0.3, // controls randomness or creativity of the model
+                maxOutputTokens: 2048, // max limit of the output , 1 token = 4 char (approx.)
             },
         });
 
@@ -638,7 +507,6 @@ app.get('/files/:fileId/download', async (req, res) => {
         const file = await prisma.file.findUnique({ where: { id: fileId } });
         if (!file) return res.status(404).send('File not found');
 
-        // ⭐ The 'path' field now holds the Cloudinary URL. Redirect for viewing/downloading.
         res.redirect(file.path);
     } catch (err) {
         console.error("❌ Download error:", err);
@@ -646,7 +514,7 @@ app.get('/files/:fileId/download', async (req, res) => {
     }
 });
 
-// -------------------- START SERVER --------------------
+
 const PORT = process.env.PORT || 8000;
 
 // Only listen if NOT running on Vercel (for local dev)
@@ -656,5 +524,4 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Export the app for Vercel
 export default app;
