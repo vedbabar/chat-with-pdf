@@ -25,25 +25,19 @@ model Message {
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   role      String   // "user" | "assistant"
   content   String
-  documents Json?    // optional (for sources, PDF refs)
+  documents Json?    // for sources, PDF refs
   createdAt DateTime @default(now())
 }
-// File model in prisma/schema.prisma
 
 model File {
   id        String   @id @default(uuid())
   filename  String
   path      String?
-  
   // 1. Keep the temporary default for publicId to handle the previous error
   publicId  String  
-  
   status    String   @default("PENDING") // e.g., PENDING, PROCESSING, DONE, ERROR
   createdAt DateTime @default(now())
-  
-  // 2. ⭐ FIX: Add @default(now()) for existing rows to solve the current error
   updatedAt DateTime @updatedAt
-  
   chatId    String
   chat      Chat     @relation("ChatFiles", fields: [chatId], references: [id], onDelete: Cascade)
 }
