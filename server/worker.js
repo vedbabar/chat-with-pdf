@@ -3,7 +3,7 @@ import { Worker } from "bullmq";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"; // ⭐ ADDED for chunking
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { PrismaClient } from "@prisma/client";
 import http from 'http';
 import "dotenv/config";
@@ -12,14 +12,12 @@ import path from "path";
 import axios from "axios";
 import os from "os"; 
 
-
 const server = http.createServer((req, res) => {
     res.writeHead(200);
     res.end('Worker is running!');
 });
 server.listen(process.env.PORT || 10000);
 console.log("Dummy server listening for Render...");
-
 
 // -------------------- INITIALIZATION --------------------
 const prisma = new PrismaClient();
@@ -37,7 +35,7 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
 const worker = new Worker(
   "file-upload-queue",
   async (job) => {
-    console.log(`📥 New Job ${job.id}: Processing...`, job.data);
+    console.log(` New Job ${job.id}: Processing...`, job.data);
 
     const { url, chatId, fileId } = JSON.parse(job.data);
 
@@ -50,7 +48,7 @@ const worker = new Worker(
     try {
       await prisma.file.update({
         where: { id: fileId },
-        data: { status: "PROCESSING" },
+        data: { status: "PROCESSING" }, // redundant operation for now, but can be used for showing status "QUEUED" later(not implemented for now)
       });
 
       const response = await axios.get(url, {
@@ -62,22 +60,22 @@ const worker = new Worker(
       const tempDir = os.tmpdir();
       tempFilePath = path.join(tempDir, `docuchat_${fileId}_${Date.now()}.pdf`);
       await fs.writeFile(tempFilePath, response.data);
-      console.log(`⬇️ File downloaded to temporary path: ${tempFilePath}`);
+      console.log(` File downloaded to temporary path: ${tempFilePath}`);
       
-      // 3️⃣ Load PDF (using the tempFilePath)
+      // 3️ Load PDF (using the tempFilePath)
       const normalizedPath = tempFilePath.replace(/\\/g, "/");
       const loader = new PDFLoader(normalizedPath);
       const docs = await loader.load();
       
-      // 4️⃣ Split documents into smaller chunks
+      // 4️ Split documents into smaller chunks
       const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,
         chunkOverlap: 200,
       });
       const splitDocs = await splitter.splitDocuments(docs);
-      console.log(`📄 Loaded and split into ${splitDocs.length} chunks for file ${fileId}`);
+      console.log(` Loaded and split into ${splitDocs.length} chunks for file ${fileId}`);
 
-      // 5️⃣ Add metadata
+      // 5️ Add metadata
       const docsWithMetadata = splitDocs.map((doc) => ({
         ...doc,
         metadata: {
@@ -87,7 +85,7 @@ const worker = new Worker(
         },
       }));
 
-      // 6️⃣ Upload vectors
+      // 6️ Upload vectors
       await QdrantVectorStore.fromDocuments(docsWithMetadata, embeddings, {
         url: process.env.QDRANT_URL,
         apiKey: process.env.QDRANT_API_KEY,
@@ -107,17 +105,17 @@ const worker = new Worker(
         }
       });
 
-      console.log(`✅ Successfully embedded file ${fileId}`);
+      console.log(` Successfully embedded file ${fileId}`);
 
-      // 7️⃣ Mark file as DONE
+      // 7️ Mark file as DONE
       await prisma.file.update({
         where: { id: fileId },
         data: { status: "DONE" },
       });
-      console.log(`📊 Status updated to DONE for file ${fileId}`);
+      console.log(` Status updated to DONE for file ${fileId}`);
 
     } catch (error) {
-      console.error(`❌ Error in job ${job.id}:`, error);
+      console.error(` Error in job ${job.id}:`, error);
 
       await prisma.file.update({
         where: { id: fileId },
@@ -126,13 +124,13 @@ const worker = new Worker(
 
       throw error;
     } finally {
-        // ⭐ CLEANUP: Delete temporary file regardless of success or failure
+        // CLEANUP: Delete temporary file regardless of success or failure
         if (tempFilePath) {
             try {
                 await fs.unlink(tempFilePath);
-                console.log(`🗑️ Cleaned up temporary file: ${tempFilePath}`);
+                console.log(` Cleaned up temporary file: ${tempFilePath}`);
             } catch (cleanupError) {
-                console.warn(`⚠️ Failed to clean up temp file ${tempFilePath}:`, cleanupError.message);
+                console.warn(` Failed to clean up temp file ${tempFilePath}:`, cleanupError.message);
             }
         }
     }
@@ -149,15 +147,15 @@ const worker = new Worker(
 
 // -------------------- WORKER EVENTS --------------------
 worker.on("completed", (job) => {
-  console.log(`🎉 Job ${job.id} completed successfully.`);
+  console.log(` Job ${job.id} completed successfully.`);
 });
 
 worker.on("failed", (job, err) => {
-  console.error(`❌ Job ${job.id} failed: ${err.message}`);
+  console.error(` Job ${job.id} failed: ${err.message}`);
 });
 
 worker.on("error", (err) => {
-  console.error("❌ Worker error:", err);
+  console.error(" Worker error:", err);
 });
 
-console.log("🚀 Worker started and connected to Redis...");
+console.log(" Worker started and connected to Redis...");
