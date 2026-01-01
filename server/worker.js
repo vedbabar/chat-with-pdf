@@ -140,8 +140,17 @@ const worker = new Worker(
     connection: {
       url: REDIS_CONNECTION_URL, 
     },
-    removeOnComplete: { count: 100 },
-    removeOnFail: { count: 50 },
+    // GARBAGE COLLECTION (Keep storage low)
+    removeOnComplete: { count: 10 }, 
+    removeOnFail: { count: 10 },
+    // OPTIMIZATION 4: THE "SILENT MODE" (Save Money on Idle Ops)
+    // 1. Check for stalled jobs every 5 minutes instead of 30 seconds
+    stalledInterval: 300000, 
+    // 2. Reduce the max stalled count to avoid excessive retries
+    maxStalledCount: 1,
+    // 3. (Optional) If you don't use delayed jobs, you can increase drain delay
+    // draining tells the worker how long to wait before checking for new jobs again if empty
+    drainDelay: 5000, // Default is 5s, usually fine, but ensure it's not 0
   }
 );
 
