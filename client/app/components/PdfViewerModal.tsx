@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { X, FileText, ExternalLink } from 'lucide-react'; // Added ExternalLink icon
+import { X, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PdfViewerModalProps {
@@ -12,8 +12,6 @@ interface PdfViewerModalProps {
 
 const PdfViewerModal: React.FC<PdfViewerModalProps> = ({ url, name, onClose }) => {
     
-    // 1. Construct the Google Docs Viewer URL
-    // We encode the PDF URL so Google can read it safely
     const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
 
     React.useEffect(() => {
@@ -39,7 +37,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({ url, name, onClose }) =
                         </h2>
                     </div>
                     <div className="flex items-center gap-2">
-                        
+                        <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={onClose}
