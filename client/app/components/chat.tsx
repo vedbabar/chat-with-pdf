@@ -48,8 +48,19 @@ function cleanAssistantContent(content?: string) {
 
 const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: externalLoading = false }) => {
   const [message, setMessage] = React.useState<string>('');
-  const [messages, setMessages] = React.useState<IMessage[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
+  
+  // 1. THE CACHE STATE (Dictionary Pattern)
+  const [messageCache, setMessageCache] = React.useState<Record<string, IMessage[]>>({});
+  const [loadingStates, setLoadingStates] = React.useState<Record<string, boolean>>({});
+  
+  // 2. DERIVED STATE
+  const messages = (chatId ? messageCache[chatId] : []) || [];
+  const isFetchingHistory = chatId ? (loadingStates[chatId] ?? true) : false;
+  const hasMessages = messages.length > 0;
+
+  // "isGenerating" tracks if the AI is currently typing (replaces old isLoading)
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  
   const [expandedDocs, setExpandedDocs] = React.useState<Record<number, boolean>>({});
   const [isTyping, setIsTyping] = React.useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -57,16 +68,19 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
 
   React.useEffect(() => {
     if (chatId) {
-      setMessages([]);
+      // We do NOT clear messages here anymore. The cache handles it.
       setExpandedDocs({});
     }
   }, [chatId]);
 
   React.useEffect(() => {
     const fetchMessages = async () => {
-      if (!chatId) {
-        setMessages([]);
-        return;
+      if (!chatId) return;
+      
+      // Smart Loading: Only show loader if we don't have data in memory
+      const inCache = messageCache[chatId] && messageCache[chatId].length > 0;
+      if (!inCache) {
+          setLoadingStates(prev => ({ ...prev, [chatId]: true }));
       }
       
       try {
@@ -76,13 +90,13 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
         });
         if (response.ok) {
           const data = await response.json();
-          setMessages(data);
-        } else {
-          setMessages([]);
+          // Update Cache
+          setMessageCache(prev => ({ ...prev, [chatId]: data }));
         }
       } catch (error) {
         console.error("Failed to fetch messages:", error);
-        setMessages([]);
+      } finally {
+        setLoadingStates(prev => ({ ...prev, [chatId]: false }));
       }
     };
 
@@ -104,19 +118,34 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
     }
   }, [messages, chatId]);
 
+  // Helper to safely update the current chat's cache
+  const updateCurrentChatMessages = (updater: (msgs: IMessage[]) => IMessage[]) => {
+      if (!chatId) return;
+      setMessageCache(prev => {
+          const currentMsgs = prev[chatId] || [];
+          const updatedMsgs = updater([...currentMsgs]);
+          return { ...prev, [chatId]: updatedMsgs };
+      });
+  };
+
   const handleSendChatMessage = async () => {
     if (!message.trim() || !chatId) return;
 
     const userMessage: IMessage = { role: 'user', content: message };
-    setMessages(prev => [...prev, userMessage]);
+    
+    // Optimistic Update
+    updateCurrentChatMessages(prev => [...prev, userMessage]);
+    
     setMessage('');
-    setIsLoading(true);
+    setIsGenerating(true);
     setIsTyping(true);
 
     try {
       const token = await getToken();
       const assistantMessageId = Date.now().toString();
-      setMessages(prev => [...prev, { 
+      
+      // Add empty assistant message placeholder
+      updateCurrentChatMessages(prev => [...prev, { 
         id: assistantMessageId,
         role: 'assistant', 
         content: '', 
@@ -151,13 +180,12 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
 
               if (data.type === 'sources') {
                 assistantDocs = data.docs || [];
-                setMessages(prev => {
-                  const newMsgs = [...prev];
-                  const lastMsg = newMsgs[newMsgs.length - 1];
+                updateCurrentChatMessages(prev => {
+                  const lastMsg = prev[prev.length - 1];
                   if (lastMsg.role === 'assistant') {
                     lastMsg.documents = assistantDocs;
                   }
-                  return newMsgs;
+                  return prev;
                 });
               }
 
@@ -165,13 +193,12 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
                 assistantContent += data.text;
                 setIsTyping(false);
                 
-                setMessages(prev => {
-                  const newMsgs = [...prev];
-                  const lastMsg = newMsgs[newMsgs.length - 1];
+                updateCurrentChatMessages(prev => {
+                  const lastMsg = prev[prev.length - 1];
                   if (lastMsg.role === 'assistant') {
                     lastMsg.content = assistantContent;
                   }
-                  return newMsgs;
+                  return prev;
                 });
               }
 
@@ -188,20 +215,20 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
 
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages(prev => {
-        const newMsgs = [...prev];
-        if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'assistant' && !newMsgs[newMsgs.length - 1].content) {
-            newMsgs.pop();
+      updateCurrentChatMessages(prev => {
+        // Remove empty placeholder if failed
+        if (prev.length > 0 && prev[prev.length - 1].role === 'assistant' && !prev[prev.length - 1].content) {
+            prev.pop();
         }
         
-        newMsgs.push({
+        prev.push({
             role: 'assistant',
             content: '<div class="flex items-center gap-2 text-red-600 dark:text-red-400"><svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>Sorry, I encountered an error. Please try again.</div>',
         });
-        return newMsgs;
+        return prev;
       });
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
       setIsTyping(false);
     }
   };
@@ -230,7 +257,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
     "Are there any important dates or figures mentioned?"
   ];
 
-  if (externalLoading) {
+  // RENDER SKELETON: Only if external loading is true OR if we are fetching history and have no cache
+  if (externalLoading || (isFetchingHistory && !hasMessages)) {
     return (
       <div className="flex flex-col h-full bg-white dark:bg-slate-950">
         <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
@@ -292,7 +320,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
               Select or create a chat to start analyzing your PDF documents
             </p>
           </div>
-        ) : (messages.length === 0 && !isLoading) ? (
+        ) : (messages.length === 0 && !isGenerating) ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="max-w-3xl w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl shadow-lg">
               <div className="relative mb-6 w-fit mx-auto">
@@ -399,7 +427,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
           ))
         )}
         
-        {isLoading && messages.length > 0 && messages[messages.length-1].role === 'user' && (
+        {isGenerating && messages.length > 0 && messages[messages.length-1].role === 'user' && (
           <div className="flex gap-4 justify-start">
             <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-3 h-fit shadow-sm">
               <Bot className="h-5 w-5 text-slate-900 dark:text-white" />
@@ -430,7 +458,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
               onKeyDown={handleKeyPress} 
               placeholder={chatId ? "Ask anything about your document..." : "Select a chat to begin"} 
               className="h-12 text-base bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-slate-900 dark:focus:border-white transition-all outline-none" 
-              disabled={isLoading || !chatId} 
+              disabled={isGenerating || !chatId} 
             />
             {isTyping && (
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
@@ -440,7 +468,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
           </div>
           <Button 
             onClick={handleSendChatMessage} 
-            disabled={!message.trim() || isLoading || !chatId}
+            disabled={!message.trim() || isGenerating || !chatId}
             className="h-12 w-12 p-0 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 transition-colors"
           >
             <Send className="h-5 w-5" />
