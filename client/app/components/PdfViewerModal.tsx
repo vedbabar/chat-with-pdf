@@ -39,17 +39,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({ url, name, onClose }) =
                         </h2>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* 2. Added a "Open in New Tab" fallback button just in case */}
-                        <a 
-                            href={url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="p-2 text-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition"
-                            title="Open original file"
-                        >
-                            <ExternalLink className="h-4 w-4" />
-                        </a>
-                        <Button 
+                        
                             variant="ghost" 
                             size="icon" 
                             onClick={onClose}
