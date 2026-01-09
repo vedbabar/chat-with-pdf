@@ -1,1 +1,170 @@
-# AI-Powered Document Chat\n\nThis repository contains the code for an AI-powered document chat application. Users can upload documents, and the application will process them to enable semantic search and question answering.\n\n## Tech Stack\n\n*   **Frontend:** Next.js, Tailwind CSS, Clerk\n*   **Backend:** Node.js, Express.js, Prisma\n*   **Database:** PostgreSQL\n*   **Vector Database:** Qdrant\n*   **LLM:** Google Gemini\n*   **Queue:** BullMQ\n*   **Cloud Storage:** Cloudinary\n\n## Project Structure\n\n```\n├── client/          # Next.js frontend application\n├── server/          # Node.js backend application\n└── README.md        # This file\n```\n\n**Key Files/Directories:**\n\n*   `client/`: Contains the Next.js frontend application.\n    *   `client/lib/utils.ts`: Utility functions for CSS class name manipulation.\n    *   `client/middleware.ts`: Clerk authentication middleware.\n    *   `client/next.config.ts`: Next.js configuration file.\n*   `server/`: Contains the Node.js backend application.\n    *   `server/index.js`: Main entry point for the backend server.\n    *   `server/worker.js`: Background worker for file processing.\n    *   `server/prisma/`: Prisma related files.\n        *   `server/prisma/schema.prisma`: Prisma schema definition.\n        *   `server/prisma/migrations/`: Database migration files.\n\n## Key Components/Modules\n\n*   **`client/lib/utils.ts`:** Provides the `cn` function for merging and deduplicating CSS class names, simplifying Tailwind CSS management.\n*   **`client/middleware.ts`:** Enforces authentication for protected routes (`/dashboard`, `/chat`, `/upload`) using Clerk.\n*   **`server/index.js`:** Handles file uploads, creates vector embeddings, and stores them in Qdrant.  Manages API endpoints and queues file processing tasks.\n*   **`server/worker.js`:** Processes uploaded PDF files, splits them into chunks, generates embeddings using Google Gemini, and stores them in Qdrant.\n*   **Prisma Schema (`server/prisma/schema.prisma`):** Defines the database schema with `Chat`, `Message`, and `File` models.\n*   **Database Migrations (`server/prisma/migrations/`):** SQL scripts to evolve the database schema.\n\n## Setup\n\n1.  **Clone the repository:**\n\n    ```bash\n    git clone <repository_url>\n    cd <repository_directory>\n    ```\n\n2.  **Install dependencies:**\n\n    ```bash\n    cd client\n    npm install # or yarn install or pnpm install\n    cd ../server\n    npm install # or yarn install or pnpm install\n    ```\n\n3.  **Set up the database:**\n\n    *   Ensure you have PostgreSQL installed and running.\n    *   Create a `.env` file in the `server/` directory and configure the `DATABASE_URL` environment variable.\n    *   Run the Prisma migrations:\n\n        ```bash\n        cd server\n        npx prisma migrate dev --name init\n        ```\n\n## Usage\n\n1.  **Start the development servers:**\n\n    ```bash\n    # In separate terminals\n    cd client\n    npm run dev # or yarn dev or pnpm dev\n\n    cd ../server\n    node index.js # or npm start\n    node worker.js # start the worker\n    ```\n\n2.  **Access the application:**\n\n    Open your browser and navigate to the address where the client application is running (usually `http://localhost:3000`).\n\n## Configuration\n\nCreate `.env` files in both `client/` and `server/` directories.\n\n**Server-side `.env` variables:**\n\n| NAME                  | Purpose                               | Required | Default |\n| --------------------- | ------------------------------------- | -------- | ------- |\n| `DATABASE_URL`        | PostgreSQL database connection URL    | Yes      |         |\n| `CLERK_SECRET_KEY`    | Clerk secret key                      | Yes      |         |\n| `GOOGLE_API_KEY`      | Google Gemini API key                 | Yes      |         |\n| `QDRANT_URL`          | Qdrant instance URL                   | Yes      |         |\n| `QDRANT_API_KEY`      | Qdrant API key                        | Yes      |         |\n| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name               | Yes      |         |\n| `CLOUDINARY_API_KEY`  | Cloudinary API key                    | Yes      |         |\n| `CLOUDINARY_API_SECRET`| Cloudinary API secret                 | Yes      |         |\n\n**Client-side `.env` variables:**\n\n| NAME                  | Purpose                               | Required | Default |\n| --------------------- | ------------------------------------- | -------- | ------- |\n| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key                      | Yes      |         |\n\n## Data Model\n\n*   **Chat:**\n    *   `id` (UUID, Primary Key)\n    *   `name` (String)\n    *   `createdAt` (DateTime)\n    *   `updatedAt` (DateTime)\n    *   `userId` (String)\n*   **Message:**\n    *   `id` (UUID, Primary Key)\n    *   `chatId` (UUID, Foreign Key to Chat)\n    *   `role` (String)\n    *   `content` (String)\n    *   `document` (JSON)\n    *   `createdAt` (DateTime)\n*   **File:**\n    *   `id` (UUID, Primary Key)\n    *   `filename` (String)\n    *   `path` (String)\n    *   `createdAt` (DateTime)\n    *   `chatId` (UUID, Foreign Key to Chat)\n    *   `status` (String, Default: \"PENDING\")\n    *   `publicId` (String, Default: \"MIGRATED_NO_ID\")\n    *   `updatedAt` (DateTime)\n\n## Deployment\n\n*   **Frontend:** Deploy the `client/` directory to a Next.js hosting platform like Vercel or Netlify.\n*   **Backend:** Deploy the `server/` directory to a Node.js hosting platform like Render, Heroku, or AWS.\n*   **Database:** Host the PostgreSQL database on a cloud provider like AWS RDS, Google Cloud SQL, or Azure Database for PostgreSQL.\n*   **Vector Database:** Host the Qdrant vector database on a cloud provider or self-host it.\n*   **Queue:** Configure BullMQ to use a Redis instance for queue management.\n*   **Cloud Storage:** Configure Cloudinary to store uploaded files.\n\n## Roadmap/Limitations\n\n*   Implement comprehensive testing.\n*   Add more robust error handling and logging.\n*   Improve the user interface and user experience.\n*   Support more document types.\n*   Implement user roles and permissions.\n*   Explore other LLMs and embedding models.
+# Chat-with-PDF: AI-Powered Document Assistant
+
+## 1. Overview
+
+**Chat-with-PDF** is a full-stack application designed to allow users to upload PDF documents and engage in intelligent, context-aware conversations with the content using Retrieval-Augmented Generation (RAG).
+
+The application provides a secure, authenticated environment where users can manage multiple chat sessions, upload files via drag-and-drop, track file processing status in real-time, and receive AI responses that cite specific document sources.
+
+## 2. Tech Stack
+
+| Area | Technology | Key Components |
+| :--- | :--- | :--- |
+| **Frontend** | Next.js (App Router), React, TypeScript | Clerk (Auth), Shadcn UI, Tailwind CSS |
+| **Backend** | Node.js, Express, TypeScript | Clerk (Auth), Prisma (ORM), CORS, Multer |
+| **Database** | PostgreSQL | Prisma Migrations |
+| **AI/RAG** | Google Generative AI (Gemini), LangChain | Embeddings, Prompt Engineering, SSE Streaming |
+| **Vector DB** | Qdrant | Vector Storage, Metadata Filtering |
+| **Queue/Worker** | BullMQ, Valkey (Redis) | Asynchronous PDF Processing, Chunking, Indexing |
+| **File Storage** | Cloudinary | External File Hosting |
+
+## 3. Project Structure
+
+| Path | Role |
+| :--- | :--- |
+| `client/` | Frontend Next.js application (UI, Auth, API interaction). |
+| `client/app/` | Core application pages, layouts, and components. |
+| `client/components/` | Reusable UI components (e.g., `ui/button.tsx`). |
+| `server/` | Backend Express API server, handling routing, auth, and file uploads. |
+| `server/worker.js` | Dedicated worker process for heavy RAG pipeline tasks (chunking, embedding). |
+| `server/prisma/` | Database schema definitions and migration history. |
+| `docker-compose.yml` | Defines local infrastructure (Valkey, Qdrant). |
+
+## 4. Key Components/Modules
+
+### Frontend Components
+
+| Component | Description |
+| :--- | :--- |
+| `ChatComponent` | Core chat interface. Manages state, handles real-time SSE streaming of AI responses, and displays cited document references. Uses `cleanAssistantContent` for markdown formatting. |
+| `FileUploadComponent` | Manages document ingestion. Handles drag-and-drop, secure authenticated uploads, and implements real-time polling to track server-side processing status (PENDING, PROCESSING, DONE). |
+| `PdfViewerModal` | Utility component using an `iframe` (via Google Docs Viewer) to securely display uploaded PDF files. |
+| `skeletons.tsx` | Provides loading states (`MessageSkeleton`, `FileUploadSkeleton`) to enhance perceived performance. |
+| `layout.tsx` | Root layout and primary authentication gate, rendering the `LandingPage` for unauthenticated users. |
+
+### Backend Services
+
+| Service | Description |
+| :--- | :--- |
+| `server/index.js` | API entry point. Initializes Express, sets up Clerk authentication, configures Multer for PDF uploads, and exposes chat management endpoints (`/chats`). Sets up the BullMQ queue for processing. |
+| `server/worker.js` | Asynchronous RAG processor. Downloads PDFs, uses LangChain's `PDFLoader` and `RecursiveCharacterTextSplitter`, generates embeddings via Google AI, and indexes chunks into Qdrant, updating file status in Prisma. |
+| **Middleware** (`client/middleware.ts`) | Global Next.js middleware enforcing authentication on all protected routes (`/dashboard`, `/chat`). |
+
+## 5. Setup
+
+### Prerequisites
+
+*   Node.js (v18+)
+*   Docker and Docker Compose
+*   PostgreSQL database instance
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd chat-with-pdf
+    ```
+
+2.  **Start Infrastructure:**
+    Use Docker Compose to launch the required services (Valkey for BullMQ, Qdrant for vector storage).
+    ```bash
+    docker compose up -d
+    ```
+
+3.  **Install Dependencies:**
+    Install dependencies for both the client and server.
+    ```bash
+    # Client (Frontend)
+    cd client
+    npm install
+    
+    # Server (Backend)
+    cd ../server
+    npm install
+    ```
+
+4.  **Database Setup:**
+    Ensure your PostgreSQL connection string is set in the server's `.env` file. Run the Prisma migrations to set up the schema:
+    ```bash
+    # From the server/ directory
+    npx prisma migrate deploy
+    ```
+
+## 6. Usage
+
+### Running the Application
+
+1.  **Start the Server API:**
+    ```bash
+    # From the server/ directory
+    npm run dev
+    ```
+
+2.  **Start the Worker Process:**
+    The worker must run separately to handle file processing jobs.
+    ```bash
+    # From the server/ directory
+    npm run worker
+    ```
+
+3.  **Start the Client:**
+    ```bash
+    # From the client/ directory
+    npm run dev
+    ```
+
+The application will be accessible at `http://localhost:3000`.
+
+### Quickstart API Endpoints (Authenticated)
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/chats` | Create a new chat session. |
+| `GET` | `/chats` | Retrieve a list of all chat sessions for the authenticated user. |
+| `GET` | `/chats/{chatId}/files` | Fetch the list of files associated with a specific chat. |
+| `POST` | `/chats/{chatId}/files` | Upload a PDF file (max 10MB) to the specified chat. |
+| `GET` | `/chat?chatId={id}&query={q}` | **Stream** a real-time AI response (SSE) for a query. |
+
+## 7. Configuration
+
+Configuration is managed via environment variables in the respective `.env` files for the client and server.
+
+| Name | Purpose | Required | Default |
+| :--- | :--- | :--- | :--- |
+| `CLERK_SECRET_KEY` | Clerk API secret for backend authentication. | Yes | - |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk public key for frontend authentication. | Yes | - |
+| `DATABASE_URL` | PostgreSQL connection string for Prisma. | Yes | - |
+| `QDRANT_URL` | URL for the Qdrant vector database. | Yes | `http://localhost:6333` |
+| `REDIS_URL` | Connection string for Valkey/Redis (BullMQ). | Yes | `redis://localhost:6379` |
+| `GEMINI_API_KEY` | Google AI API key for LLM and Embeddings. | Yes | - |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account name for file hosting. | Yes | - |
+| `API_BASE_URL` | Base URL for the backend API server. | Yes | `http://localhost:8080` |
+
+## 8. Data Model
+
+The application uses a PostgreSQL database managed by Prisma.
+
+### Entities and Relations
+
+| Entity | Description | Key Fields | Relations |
+| :--- | :--- | :--- | :--- |
+| **Chat** | Root entity for a conversation thread. | `id`, `name`, `userId` (NOT NULL) | Has many `Message`, Has many `File` |
+| **Message** | Individual entry in a chat history. | `id`, `chatId`, `role`, `content`, `documents` (JSONB) | Belongs to `Chat` |
+| **File** | Metadata for an uploaded document. | `id`, `chatId`, `filename`, `status` (PENDING/PROCESSING/DONE/ERROR), `publicId` | Belongs to `Chat` |
+
+**Key Schema Constraints:**
+*   `Chat.userId` ensures every chat is owned by an authenticated user.
+*   `File.status` tracks the asynchronous RAG processing pipeline.
+*   `ON DELETE CASCADE` ensures messages and files are deleted when the parent `Chat` is removed.
+
+## 10. Deployment
+
+The application is designed for a distributed deployment environment:
+
+*   **Client:** Deployed as a Next.js application (e.g., Vercel, Netlify).
+*   **Server:** Deployed as a Node.js Express service (e.g., Render, AWS EC2).
+*   **Worker:** Deployed as a separate, long-running Node.js process, often requiring higher memory/CPU (e.g., Render Background Worker, Kubernetes Job).
+*   **Infrastructure:** Requires managed services for PostgreSQL, Qdrant, and Valkey/Redis (or self-hosted Docker containers).
+
+The `server/worker.js` includes a basic HTTP health check on port `10000` for monitoring in production environments.
