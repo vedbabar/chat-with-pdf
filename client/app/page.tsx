@@ -73,7 +73,7 @@ function DashboardContent() {
         <div className="p-4 border-b border-white/5">
           <button 
             onClick={createChat} 
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-[#171717] text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-[#171717] text-sm font-medium rounded-lg hover:bg-white/90 transition-colors cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             New Chat

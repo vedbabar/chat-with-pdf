@@ -237,7 +237,7 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
           {chatId && (
             <button
               onClick={handleDeleteChat}
-              className="text-xs text-red-400/70 hover:text-red-400 transition-colors"
+              className="text-xs text-red-400/70 hover:text-red-400 hover:bg-red-500/10 px-2 py-1 rounded-md transition-colors cursor-pointer"
             >
               Delete chat
             </button>
@@ -321,7 +321,7 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
                     {file.status === 'DONE' && file.path && (
                       <button
                         onClick={() => setPdfToView({ url: file.path!, name: file.filename })}
-                        className="p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition"
+                        className="p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
                         title="View PDF"
                       >
                         <Eye className="h-4 w-4" />
@@ -329,7 +329,7 @@ const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
                     )}
                     <button
                       onClick={() => handleDeleteFile(file)}
-                      className="p-1.5 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                      className="p-1.5 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
                       title="Delete file"
                     >
                       <Trash2 className="h-4 w-4" />

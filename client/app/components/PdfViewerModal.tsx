@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { X, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { X, FileText, ExternalLink, Download } from 'lucide-react';
 
 interface PdfViewerModalProps {
     url: string;
@@ -19,37 +18,64 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({ url, name, onClose }) =
             if (event.key === 'Escape') onClose();
         };
         document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+            document.body.style.overflow = '';
+        };
     }, [onClose]);
 
     if (!url) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 transition-opacity duration-300">
-            <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-lg shadow-2xl flex flex-col overflow-hidden">
-                
+        <div 
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <div 
+                className="relative w-full h-full max-w-5xl max-h-[90vh] bg-[#171717] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-white/10"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex-shrink-0">
-                    <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]" title={name}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#212121]">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="h-4 w-4 text-white/70" />
+                        </div>
+                        <h2 className="text-sm font-medium text-white truncate" title={name}>
                             {name}
                         </h2>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
+                    <div className="flex items-center gap-1">
+                        <a 
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                            title="Open in new tab"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                        </a>
+                        <a 
+                            href={url}
+                            download={name}
+                            className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                            title="Download"
+                        >
+                            <Download className="h-4 w-4" />
+                        </a>
+                        <button 
                             onClick={onClose}
-                            className="h-8 w-8 text-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700"
+                            className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer ml-1"
+                            title="Close (Esc)"
                         >
                             <X className="h-4 w-4" />
-                        </Button>
+                        </button>
                     </div>
                 </div>
 
-                {/* 3. The Viewer Area */}
-                <div className="flex-1 overflow-hidden bg-slate-100 dark:bg-slate-950 relative">
+                {/* Viewer Area */}
+                <div className="flex-1 overflow-hidden bg-[#0a0a0a] relative">
                     <iframe 
                         src={viewerUrl} 
                         className="w-full h-full border-0"
