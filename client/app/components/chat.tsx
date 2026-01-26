@@ -320,47 +320,54 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
         </div>
       </div>
 
-      {/* Input Area - ChatGPT Style */}
-      <div className="p-4 pb-6">
+      {/* Input Area - Exact ChatGPT Style */}
+      <div className="bg-[#212121] px-4 pb-6 pt-2">
         <div className="max-w-3xl mx-auto">
-          <div className="relative bg-[#2f2f2f] rounded-2xl border border-white/10 focus-within:border-white/20 transition-colors shadow-lg">
-            <div className="flex items-end gap-2 p-3">
-              <button className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <div className="flex items-end gap-3 bg-[#2f2f2f] rounded-3xl px-4 py-3">
+            <button className="p-1 text-white/50 hover:text-white transition-colors cursor-pointer">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            <textarea 
+              value={message} 
+              onChange={(e) => {
+                setMessage(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
+              }} 
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendChatMessage();
+                }
+              }}
+              placeholder="Ask anything"
+              rows={1}
+              className="flex-1 bg-transparent text-white text-[15px] placeholder:text-white/50 resize-none outline-none py-1 leading-6"
+              disabled={isGenerating || !chatId}
+              style={{ minHeight: '24px', maxHeight: '150px' }}
+            />
+            <div className="flex items-center gap-2">
+              <button className="p-1 text-white/50 hover:text-white transition-colors cursor-pointer">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
               </button>
-              <textarea 
-                value={message} 
-                onChange={(e) => {
-                  setMessage(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
-                }} 
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendChatMessage();
-                  }
-                }}
-                placeholder="Message ChatPDF..."
-                rows={1}
-                className="flex-1 bg-transparent text-white text-[15px] placeholder:text-white/40 resize-none outline-none py-2 leading-6"
-                disabled={isGenerating || !chatId}
-                style={{ minHeight: '24px', maxHeight: '150px' }}
-              />
               <button 
                 onClick={handleSendChatMessage} 
                 disabled={!message.trim() || isGenerating || !chatId}
-                className="p-2 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                className="transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
                   <div className="w-8 h-8 flex items-center justify-center">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   </div>
                 ) : (
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${message.trim() ? 'bg-white hover:bg-white/90' : 'bg-white/20'}`}>
-                    <Send className={`h-4 w-4 ${message.trim() ? 'text-[#212121]' : 'text-white/50'}`} />
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-white/90 transition-colors">
+                    <svg className="w-4 h-4 text-[#212121]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                    </svg>
                   </div>
                 )}
               </button>
