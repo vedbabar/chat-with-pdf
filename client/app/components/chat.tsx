@@ -321,7 +321,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
       </div>
 
       {/* Input Area - Exact ChatGPT Style */}
-      <div className="bg-[#212121] px-4 pb-6 pt-2">
+      <div className="bg-[#212121] px-4 pb-3 pt-2">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-end gap-3 bg-[#2f2f2f] rounded-3xl px-4 py-3">
             <button className="p-1 text-white/50 hover:text-white transition-colors cursor-pointer">
@@ -373,7 +373,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatId, isLoading: extern
               </button>
             </div>
           </div>
-          <p className="text-[11px] text-white/30 text-center mt-3">
+          <p className="text-[11px] text-white/30 text-center mt-2">
             ChatPDF can make mistakes. Check important info.
           </p>
         </div>
