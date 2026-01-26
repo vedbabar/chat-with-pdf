@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: 'Transform your PDFs into interactive conversations with AI',
 };
 
+import { Toaster } from "@/components/ui/sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,6 +34,7 @@ export default function RootLayout({
           <SignedIn>
             {children}
           </SignedIn>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
